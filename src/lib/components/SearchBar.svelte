@@ -129,12 +129,12 @@
 					{#each items as item (item.id)}
 						<button
 							onclick={() => pick(item)}
-							class="flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-white/5"
+							class="flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-foreground/5"
 						>
 							{#if item.cover_url}
 								<img src={item.cover_url} alt="" class="size-9 rounded-md object-cover" />
 							{:else}
-								<div class="grid size-9 place-items-center rounded-md bg-white/5 text-muted-foreground">
+								<div class="grid size-9 place-items-center rounded-md bg-foreground/5 text-muted-foreground">
 									{iconFor[g.key]}
 								</div>
 							{/if}

@@ -79,7 +79,8 @@
 			<path
 				d={contour}
 				fill="none"
-				stroke="rgba(255,255,255,0.35)"
+				stroke="var(--muted-foreground)"
+				stroke-opacity="0.55"
 				stroke-width="1.2"
 				vector-effect="non-scaling-stroke"
 			/>
@@ -105,7 +106,7 @@
 		</svg>
 	{:else}
 		<div class="flex h-full items-center">
-			<div class="h-px w-full bg-white/15"></div>
+			<div class="h-px w-full bg-foreground/15"></div>
 		</div>
 	{/if}
 </div>

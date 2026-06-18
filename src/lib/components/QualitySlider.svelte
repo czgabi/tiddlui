@@ -57,7 +57,7 @@
 		class="qs-track relative h-5 w-36 cursor-pointer touch-none select-none"
 	>
 		<!-- rail -->
-		<div class="absolute top-1/2 right-0 left-0 h-[3px] -translate-y-1/2 rounded-full bg-white/12"></div>
+		<div class="absolute top-1/2 right-0 left-0 h-[3px] -translate-y-1/2 rounded-full bg-foreground/12"></div>
 		<!-- fill -->
 		<div
 			class="qs-fill absolute top-1/2 left-0 h-[3px] -translate-y-1/2 rounded-full bg-gradient-to-r from-accent-cyan to-accent-purple"
@@ -67,8 +67,8 @@
 		{#each QUALITIES as q, i (q)}
 			<div
 				class="absolute top-1/2 size-[3px] -translate-x-1/2 -translate-y-1/2 rounded-full {i <= index
-					? 'bg-white/0'
-					: 'bg-white/30'}"
+					? 'bg-foreground/0'
+					: 'bg-foreground/30'}"
 				style="left: {(i / (QUALITIES.length - 1)) * 100}%"
 			></div>
 		{/each}

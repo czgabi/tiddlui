@@ -60,7 +60,7 @@
 						Downloading
 					</h3>
 					{#each downloads.downloading as item (item.id)}
-						<div class="rounded-lg bg-white/5 p-2.5">
+						<div class="rounded-lg bg-foreground/5 p-2.5">
 							<div class="flex items-center gap-2.5">
 								<Download class="size-4 shrink-0 text-accent-cyan" />
 								<span class="min-w-0 flex-1 truncate text-sm">{label(item)}</span>
@@ -68,7 +68,7 @@
 									<X class="size-4" />
 								</button>
 							</div>
-							<div class="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+							<div class="mt-2 h-1.5 overflow-hidden rounded-full bg-foreground/10">
 								<div
 									class="h-full rounded-full bg-gradient-to-r from-accent-cyan to-accent-purple transition-all"
 									style="width: {formatPercent(item.progress)}"

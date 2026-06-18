@@ -20,7 +20,7 @@
 </script>
 
 <Dialog.Root bind:open>
-	<Dialog.Content class="glass-strong border-white/10 sm:max-w-md">
+	<Dialog.Content class="glass-strong border-foreground/10 sm:max-w-md">
 		<Dialog.Header>
 			<Dialog.Title class="flex items-center gap-2">
 				<ShieldCheck class="size-5 text-accent-cyan" /> Sign in to Tidal
@@ -35,11 +35,11 @@
 			{#if auth.pending}
 				<p class="text-sm text-muted-foreground">Enter this code on the Tidal page:</p>
 				<div
-					class="rounded-xl border border-white/10 bg-white/5 px-6 py-3 font-mono text-2xl tracking-[0.3em] text-foreground"
+					class="rounded-xl border border-foreground/10 bg-foreground/5 px-6 py-3 font-mono text-2xl tracking-[0.3em] text-foreground"
 				>
 					{auth.userCode}
 				</div>
-				<Button variant="secondary" onclick={() => auth.verificationUrl && openUrl(auth.verificationUrl)}>
+				<Button variant="secondary" onclick={() => auth.verificationUrl?.startsWith('https://') && openUrl(auth.verificationUrl)}>
 					<ExternalLink class="size-4" /> Open authorization page
 				</Button>
 				<div class="flex items-center gap-2 text-sm text-muted-foreground">

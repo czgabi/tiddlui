@@ -40,7 +40,7 @@
 </script>
 
 <Dialog.Root bind:open>
-	<Dialog.Content class="glass-strong border-white/10 sm:max-w-lg">
+	<Dialog.Content class="glass-strong border-foreground/10 sm:max-w-lg">
 		<Dialog.Header>
 			<Dialog.Title>Settings</Dialog.Title>
 			<Dialog.Description>Preferences are saved automatically.</Dialog.Description>
@@ -90,10 +90,10 @@
 							onclick={() => settings.setTheme(t.id)}
 							class="flex flex-col gap-2 rounded-lg border p-2 text-left transition-colors {settings.theme ===
 							t.id
-								? 'border-accent-cyan bg-white/5'
-								: 'border-white/10 hover:bg-white/5'}"
+								? 'border-accent-cyan bg-foreground/5'
+								: 'border-foreground/10 hover:bg-foreground/5'}"
 						>
-							<div class="flex h-8 overflow-hidden rounded-md ring-1 ring-white/10">
+							<div class="flex h-8 overflow-hidden rounded-md ring-1 ring-foreground/10">
 								<span class="flex-1" style="background:{t.swatch[0]}"></span>
 								<span class="flex-1" style="background:{t.swatch[1]}"></span>
 								<span class="flex-1" style="background:{t.swatch[2]}"></span>
@@ -118,7 +118,7 @@
 			</div>
 
 			{#if auth.loggedIn}
-				<div class="flex items-center justify-between border-t border-white/10 pt-4">
+				<div class="flex items-center justify-between border-t border-foreground/10 pt-4">
 					<div class="text-sm text-muted-foreground">
 						Signed in{auth.user ? ` as ${auth.user}` : ''}
 					</div>

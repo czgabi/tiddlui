@@ -166,7 +166,7 @@
 		class="fixed right-4 bottom-4 z-50 max-w-sm rounded-xl border px-4 py-2.5 text-sm backdrop-blur-md {ui
 			.toast.kind === 'error'
 			? 'border-destructive/40 bg-destructive/15 text-destructive-foreground'
-			: 'border-white/10 bg-white/10 text-foreground'}"
+			: 'border-foreground/10 bg-foreground/10 text-foreground'}"
 	>
 		{ui.toast.message}
 	</div>

@@ -79,18 +79,18 @@
 			<div class="flex min-h-0 flex-1 gap-5">
 				<!-- cover -->
 				<div class="flex w-48 shrink-0 flex-col gap-3">
-					<div class="relative aspect-square w-48 overflow-hidden rounded-xl shadow-2xl ring-1 ring-white/10">
+					<div class="relative aspect-square w-48 overflow-hidden rounded-xl shadow-2xl ring-1 ring-foreground/10">
 						{#if cover}
 							<img src={cover} alt="" class="size-full object-cover" />
 						{:else}
 							{@const Icon = iconFor[resource?.kind ?? 'album']}
-							<div class="grid size-full place-items-center bg-white/5">
+							<div class="grid size-full place-items-center bg-foreground/5">
 								<Icon class="size-14 text-muted-foreground/50" />
 							</div>
 						{/if}
 					</div>
 					{#if resource?.audio_quality}
-						<span class="inline-flex items-center gap-1.5 self-start rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-accent-cyan">
+						<span class="inline-flex items-center gap-1.5 self-start rounded-full border border-foreground/10 bg-foreground/5 px-3 py-1 text-xs text-accent-cyan">
 							<BadgeCheck class="size-3.5" />{resource.audio_quality}
 						</span>
 					{/if}
@@ -112,7 +112,7 @@
 								<p class="text-xs text-muted-foreground/60">Loading tracks…</p>
 							{/if}
 							{#each downloads.tracklist as t, i (t.id)}
-								<div class="group relative flex items-center gap-3 rounded-md pr-8 hover:bg-white/5">
+								<div class="group relative flex items-center gap-3 rounded-md pr-8 hover:bg-foreground/5">
 									<button onclick={() => pickTrack(t)} class="flex min-w-0 flex-1 items-center gap-3 px-2 py-1.5 text-left">
 										<span class="w-5 shrink-0 text-right text-xs text-muted-foreground/60">{i + 1}</span>
 										<div class="min-w-0 flex-1">
@@ -130,7 +130,7 @@
 					{:else if trackMeta.length}
 						<div class="mt-4 grid grid-cols-2 gap-2 overflow-y-auto pr-1">
 							{#each trackMeta as [k, v, wide] (k)}
-								<div class="rounded-lg border border-white/5 bg-white/5 px-3 py-2 {wide ? 'col-span-2' : ''}">
+								<div class="rounded-lg border border-foreground/5 bg-foreground/5 px-3 py-2 {wide ? 'col-span-2' : ''}">
 									<div class="text-[10px] font-semibold tracking-wide text-muted-foreground/70 uppercase">{k}</div>
 									<div class="truncate text-sm text-foreground" title={v}>{v}</div>
 								</div>
@@ -143,7 +143,7 @@
 
 		<!-- player transport -->
 		{#if player.path}
-			<div class="mt-3 flex flex-col gap-1.5 border-t border-white/10 pt-3">
+			<div class="mt-3 flex flex-col gap-1.5 border-t border-foreground/10 pt-3">
 				<div class="flex items-center gap-3">
 					<button onclick={() => player.toggle()} title={player.playing ? 'Pause' : 'Play'} aria-label={player.playing ? 'Pause' : 'Play'} class="text-foreground hover:text-accent-cyan">
 						{#if player.playing}<Pause class="size-5" />{:else}<Play class="size-5" />{/if}
