@@ -1,0 +1,4 @@
+# Build-time deps for the engine sidecar (Python >= 3.13).
+# tiddl pulls in aiohttp, pydantic, mutagen, m3u8, requests, requests-cache, etc.
+tiddl==3.4.3
+pyinstaller>=6.0

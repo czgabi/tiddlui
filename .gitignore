@@ -1,0 +1,23 @@
+.DS_Store
+node_modules
+/build
+/.svelte-kit
+/package
+.env
+.env.*
+!.env.example
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# Rust / Tauri build output
+/src-tauri/target
+
+# Bundled engine binary (build artifact — produced by sidecar/build.ps1)
+/src-tauri/binaries/
+
+# Python sidecar build artifacts
+/sidecar/dist
+/sidecar/build_pyi
+/sidecar/*.spec
+/sidecar/__pycache__
+**/__pycache__/
