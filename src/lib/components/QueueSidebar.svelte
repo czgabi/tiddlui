@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ChevronRight, X, FolderOpen, RotateCw, Download, CheckCircle2, AlertCircle, Play, Trash2 } from '@lucide/svelte';
+	import { ChevronRight, X, FolderOpen, RotateCw, Download, CheckCircle2, AlertCircle, Trash2 } from '@lucide/svelte';
 	import { revealItemInDir } from '@tauri-apps/plugin-opener';
 	import { downloads } from '$lib/stores/download.svelte';
 	import { player } from '$lib/stores/player.svelte';
@@ -24,7 +24,9 @@
 		if (item.path) revealItemInDir(item.path).catch(() => {});
 	}
 
-	function playItem(item: QueueItem) {
+	// Clicking a history row selects it: shows its metadata + loads the player.
+	function selectItem(item: QueueItem) {
+		if (item.resource) downloads.selected = item.resource;
 		if (item.path) player.load(item.path, label(item));
 	}
 </script>
@@ -64,16 +66,34 @@
 							<div class="flex items-center gap-2.5">
 								<Download class="size-4 shrink-0 text-accent-cyan" />
 								<span class="min-w-0 flex-1 truncate text-sm">{label(item)}</span>
-								<button onclick={() => engine.cancel(item.id)} class="text-muted-foreground hover:text-destructive">
+								<button onclick={() => engine.cancel(item.id)} title="Cancel" aria-label="Cancel" class="text-muted-foreground hover:text-destructive">
 									<X class="size-4" />
 								</button>
 							</div>
-							<div class="mt-2 h-1.5 overflow-hidden rounded-full bg-foreground/10">
-								<div
-									class="h-full rounded-full bg-gradient-to-r from-accent-cyan to-accent-purple transition-all"
-									style="width: {formatPercent(item.progress)}"
-								></div>
-							</div>
+							{#if item.total && item.total > 1}
+								<!-- album/playlist: current track + overall -->
+								<div class="mt-2 truncate text-[11px] text-muted-foreground">
+									{(item.completed ?? 0) + 1}/{item.total} · {item.current_artist
+										? item.current_artist + ' — '
+										: ''}{item.current_title ?? ''}
+								</div>
+								<div class="mt-1 h-1 overflow-hidden rounded-full bg-foreground/10">
+									<div class="h-full rounded-full bg-accent-cyan transition-all" style="width: {formatPercent(item.track_progress)}"></div>
+								</div>
+								<div class="mt-1.5 flex items-center gap-2">
+									<span class="text-[10px] tracking-wide text-muted-foreground uppercase">All</span>
+									<div class="h-1.5 flex-1 overflow-hidden rounded-full bg-foreground/10">
+										<div class="h-full rounded-full bg-gradient-to-r from-accent-cyan to-accent-purple transition-all" style="width: {formatPercent(item.progress)}"></div>
+									</div>
+								</div>
+							{:else}
+								<div class="mt-2 h-1.5 overflow-hidden rounded-full bg-foreground/10">
+									<div
+										class="h-full rounded-full bg-gradient-to-r from-accent-cyan to-accent-purple transition-all"
+										style="width: {formatPercent(item.progress)}"
+									></div>
+								</div>
+							{/if}
 						</div>
 					{/each}
 				</section>
@@ -110,36 +130,36 @@
 					{/if}
 				</div>
 				{#if downloads.history.length === 0}
-					<p class="px-1 text-xs text-muted-foreground/60">No downloads yet.</p>
+					<p class="px-1 text-xs text-muted-foreground">No downloads yet.</p>
 				{/if}
 				{#each downloads.history as item (item.id)}
-					<div class="group flex items-center gap-2.5 rounded-lg px-1 py-1.5">
+					<div
+						class="group flex items-center gap-2.5 rounded-lg px-1 py-1.5 transition-colors {player.path &&
+						player.path === item.path
+							? 'bg-foreground/10 ring-1 ring-accent-cyan/40'
+							: 'hover:bg-foreground/5'}"
+					>
 						{#if item.status === 'complete'}
 							<CheckCircle2 class="size-4 shrink-0 text-emerald-400" />
-						{:else if item.status === 'cancelled'}
-							<X class="size-4 shrink-0 text-muted-foreground" />
 						{:else}
 							<AlertCircle class="size-4 shrink-0 text-destructive" />
 						{/if}
 						<button
-							onclick={() => reveal(item)}
+							onclick={() => selectItem(item)}
 							disabled={!item.path}
-							title={item.path ? 'Reveal in folder' : ''}
+							title={item.path ? 'Load this track' : ''}
 							class="min-w-0 flex-1 text-left disabled:cursor-default"
 						>
 							<div class="truncate text-sm text-muted-foreground hover:text-foreground">{label(item)}</div>
-							<div class="text-[11px] text-muted-foreground/60">{relativeDate(item.created_at)}</div>
+							<div class="text-[11px] text-muted-foreground">{relativeDate(item.created_at)}</div>
 						</button>
 						<div class="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
 							{#if item.status === 'complete' && item.path}
-								<button title="Play / visualize" onclick={() => playItem(item)} class="text-muted-foreground hover:text-foreground">
-									<Play class="size-3.5" />
-								</button>
-								<button title="Reveal in folder" onclick={() => reveal(item)} class="text-muted-foreground hover:text-foreground">
+								<button title="Reveal in folder" aria-label="Reveal in folder" onclick={() => reveal(item)} class="text-muted-foreground hover:text-foreground">
 									<FolderOpen class="size-3.5" />
 								</button>
 							{/if}
-							<button title="Download again" onclick={() => startDownload(item.url, { quality: item.quality, resource: item.resource })} class="text-muted-foreground hover:text-foreground">
+							<button title="Download again" aria-label="Download again" onclick={() => startDownload(item.url, { quality: item.quality, resource: item.resource, force: true })} class="text-muted-foreground hover:text-foreground">
 								<RotateCw class="size-3.5" />
 							</button>
 						</div>

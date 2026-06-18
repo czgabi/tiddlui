@@ -50,6 +50,8 @@ class PlayerStore {
 		if (!PlayerStore.isAudio(path)) return;
 		const a = this.#ensure();
 		const token = ++this.#token;
+		a.pause(); // reset transport so the play/pause icon isn't stuck
+		this.playing = false;
 		this.path = path;
 		this.title = title;
 		this.analysis = null;

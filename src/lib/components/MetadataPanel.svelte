@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Disc3, Music2, ListMusic, User, Play, Pause, Volume2, VolumeX, Download, BadgeCheck, Loader2 } from '@lucide/svelte';
 	import WaveformSeek from '$lib/components/WaveformSeek.svelte';
+	import { Button } from '$lib/components/ui/button';
 	import { downloads } from '$lib/stores/download.svelte';
 	import { player } from '$lib/stores/player.svelte';
 	import { engine } from '$lib/ipc/commands';
@@ -60,10 +61,14 @@
 </script>
 
 <div class="glass relative flex h-full flex-col overflow-hidden">
-	<!-- blurred cover as an artistic background filler -->
+	<!-- very soft wash of the album-art colors, blended into the theme -->
 	{#if cover}
-		<img src={cover} alt="" class="absolute inset-0 size-full scale-125 object-cover opacity-25 blur-3xl" />
-		<div class="absolute inset-0 bg-gradient-to-t from-background/90 via-background/65 to-background/45"></div>
+		<img
+			src={cover}
+			alt=""
+			class="absolute inset-0 size-full scale-110 object-cover opacity-30 blur-[64px] saturate-150"
+		/>
+		<div class="absolute inset-0 bg-background/75"></div>
 	{/if}
 
 	<div class="relative z-10 flex min-h-0 flex-1 flex-col p-5">
@@ -71,7 +76,7 @@
 			<div class="flex h-full flex-col items-center justify-center gap-3 text-center">
 				<Disc3 class="size-16 text-muted-foreground/40" />
 				<h2 class="text-lg font-semibold text-muted-foreground">Nothing loaded</h2>
-				<p class="max-w-xs text-sm text-muted-foreground/70">
+				<p class="max-w-xs text-sm text-muted-foreground">
 					Search or paste a Tidal link above. Downloaded tracks play here with a seekable waveform.
 				</p>
 			</div>
@@ -103,23 +108,33 @@
 					</h2>
 					<p class="truncate text-sm text-muted-foreground">{resource?.artist ?? ''}</p>
 					{#if headline.length}
-						<p class="mt-1 text-xs text-muted-foreground/70">{headline.join('  •  ')}</p>
+						<p class="mt-1 text-xs text-muted-foreground">{headline.join('  •  ')}</p>
 					{/if}
 
 					{#if isCollection}
-						<div class="mt-3 min-h-0 flex-1 overflow-y-auto pr-1">
+						<div class="mt-3 flex items-center justify-between gap-2">
+							<span class="text-xs text-muted-foreground">
+								{downloads.tracklist.length || resource?.number_of_tracks || ''} tracks
+							</span>
+							{#if resource}
+								<Button size="sm" onclick={() => startDownload(tidalUrl(resource.kind, resource.id), { resource })}>
+									<Download class="size-4" /> Download all
+								</Button>
+							{/if}
+						</div>
+						<div class="mt-2 min-h-0 flex-1 overflow-y-auto pr-1">
 							{#if downloads.tracklist.length === 0}
-								<p class="text-xs text-muted-foreground/60">Loading tracks…</p>
+								<p class="text-xs text-muted-foreground">Loading tracks…</p>
 							{/if}
 							{#each downloads.tracklist as t, i (t.id)}
 								<div class="group relative flex items-center gap-3 rounded-md pr-8 hover:bg-foreground/5">
 									<button onclick={() => pickTrack(t)} class="flex min-w-0 flex-1 items-center gap-3 px-2 py-1.5 text-left">
-										<span class="w-5 shrink-0 text-right text-xs text-muted-foreground/60">{i + 1}</span>
+										<span class="w-5 shrink-0 text-right text-xs text-muted-foreground">{i + 1}</span>
 										<div class="min-w-0 flex-1">
 											<div class="truncate text-sm text-foreground">{t.title}</div>
 											<div class="truncate text-xs text-muted-foreground">{t.artist}</div>
 										</div>
-										<span class="shrink-0 text-xs text-muted-foreground/60">{formatDuration(t.duration)}</span>
+										<span class="shrink-0 text-xs text-muted-foreground">{formatDuration(t.duration)}</span>
 									</button>
 									<button title="Download this track" onclick={() => startDownload(tidalUrl('track', t.id), { resource: t })} class="absolute right-2 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-accent-cyan">
 										<Download class="size-4" />
@@ -131,7 +146,7 @@
 						<div class="mt-4 grid grid-cols-2 gap-2 overflow-y-auto pr-1">
 							{#each trackMeta as [k, v, wide] (k)}
 								<div class="rounded-lg border border-foreground/5 bg-foreground/5 px-3 py-2 {wide ? 'col-span-2' : ''}">
-									<div class="text-[10px] font-semibold tracking-wide text-muted-foreground/70 uppercase">{k}</div>
+									<div class="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">{k}</div>
 									<div class="truncate text-sm text-foreground" title={v}>{v}</div>
 								</div>
 							{/each}

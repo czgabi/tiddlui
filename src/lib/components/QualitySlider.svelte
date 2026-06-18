@@ -81,7 +81,7 @@
 	</div>
 
 	<span class="w-10 text-xs font-medium text-foreground">{QUALITY_LABELS[value]}</span>
-	<span class="hidden text-[11px] text-muted-foreground/70 lg:inline">{QUALITY_DESC[value]}</span>
+	<span class="hidden text-[11px] text-muted-foreground lg:inline">{QUALITY_DESC[value]}</span>
 </div>
 
 <style>

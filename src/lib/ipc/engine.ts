@@ -27,6 +27,7 @@ function route(ev: EngineEvent) {
 			break;
 		case 'auth_status':
 			auth.setStatus(ev.logged_in, ev.user ?? null, ev.country_code ?? null);
+			if (!ev.logged_in) clearAppState(); // signing out wipes the session
 			break;
 		case 'login_pending':
 			auth.startPending(ev.verification_url, ev.user_code, ev.expires_in);
@@ -58,6 +59,9 @@ function route(ev: EngineEvent) {
 		case 'tracklist':
 			if (ev.url === downloads.tracklistUrl) downloads.tracklist = ev.tracks ?? [];
 			break;
+		case 'duplicate_prompt':
+			ui.duplicate = { job_id: ev.job_id, name: ev.name };
+			break;
 		case 'job_update':
 			handleJob(ev);
 			break;
@@ -75,9 +79,26 @@ function route(ev: EngineEvent) {
 	}
 }
 
+function clearAppState() {
+	downloads.items = [];
+	downloads.selected = null;
+	downloads.url = '';
+	downloads.tracklist = [];
+	downloads.tracklistUrl = null;
+	player.unload();
+	search.query = '';
+	search.clear();
+}
+
 function handleJob(ev: EngineEvent) {
+	// Cancelled downloads vanish silently (no history entry, no toast).
+	if (ev.status === 'cancelled') {
+		downloads.remove(ev.job_id);
+		return;
+	}
 	const patch: Partial<QueueItem> = { status: ev.status as JobStatus };
 	if (ev.progress !== undefined) patch.progress = ev.progress;
+	if (ev.track_progress !== undefined) patch.track_progress = ev.track_progress;
 	if (ev.resource !== undefined) patch.resource = ev.resource;
 	if (ev.current_title !== undefined) patch.current_title = ev.current_title;
 	if (ev.current_artist !== undefined) patch.current_artist = ev.current_artist;

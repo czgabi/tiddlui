@@ -65,6 +65,7 @@ export interface QueueItem {
 	quality: Quality;
 	status: JobStatus;
 	progress: number;
+	track_progress?: number;
 	resource?: Resource;
 	current_title?: string;
 	current_artist?: string;

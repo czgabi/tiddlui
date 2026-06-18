@@ -11,6 +11,7 @@
 	import QueueSidebar from '$lib/components/QueueSidebar.svelte';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
 	import AuthDialog from '$lib/components/AuthDialog.svelte';
+	import DuplicateDialog from '$lib/components/DuplicateDialog.svelte';
 	import QualitySlider from '$lib/components/QualitySlider.svelte';
 	import { Button } from '$lib/components/ui/button';
 
@@ -28,7 +29,6 @@
 	let searchBar = $state<{ focus: () => void } | null>(null);
 	let settingsOpen = $state(false);
 	let authOpen = $state(false);
-	let promptedLogin = false;
 
 	function go() {
 		startDownload(downloads.url, { resource: downloads.selected ?? undefined });
@@ -47,12 +47,9 @@
 		}
 	}
 
-	// Auto-open the sign-in dialog once if the engine reports we're logged out.
+	// Force sign-in whenever signed out (startup or after logout).
 	$effect(() => {
-		if (ui.engineReady && !auth.loggedIn && !auth.pending && !promptedLogin) {
-			promptedLogin = true;
-			authOpen = true;
-		}
+		if (ui.engineReady && !auth.loggedIn) authOpen = true;
 	});
 
 	onMount(() => {
@@ -134,7 +131,7 @@
 			<!-- Controls -->
 			<div class="glass flex items-center gap-4 p-4">
 				<div class="flex items-center gap-2">
-					<span class="text-[11px] font-medium tracking-wide text-muted-foreground/70 uppercase">Save to</span>
+					<span class="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">Save to</span>
 					<Button variant="secondary" size="sm" onclick={browse} title="Choose where downloads are saved">
 						<FolderOpen class="size-4" />
 						<span class="max-w-[12rem] truncate">{settings.output_path || 'Choose folder'}</span>
@@ -177,3 +174,4 @@
 
 <SettingsModal bind:open={settingsOpen} />
 <AuthDialog bind:open={authOpen} />
+<DuplicateDialog />

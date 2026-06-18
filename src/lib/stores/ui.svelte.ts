@@ -9,6 +9,8 @@ class UiStore {
 	ffmpeg = $state<FfmpegStatus | null>(null);
 	toast = $state<{ message: string; kind: 'info' | 'error' } | null>(null);
 	isMac = $state(false);
+	// pending "file already exists" prompt from the engine
+	duplicate = $state<{ job_id: string; name: string } | null>(null);
 
 	get mod(): string {
 		return this.isMac ? '⌘' : 'Ctrl';

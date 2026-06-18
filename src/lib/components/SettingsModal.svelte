@@ -60,11 +60,11 @@
 			<Dialog.Description>Preferences are saved automatically.</Dialog.Description>
 		</Dialog.Header>
 
-		<div class="flex max-h-[70vh] flex-col gap-5 overflow-y-auto py-2 pr-1">
+		<div class="flex max-h-[70vh] flex-col gap-5 overflow-x-hidden overflow-y-auto py-2 pr-1">
 			<!-- Output folder -->
 			<div class="flex flex-col gap-2">
 				<Label class="text-xs tracking-wide text-muted-foreground uppercase">Download folder</Label>
-				<p class="text-xs text-muted-foreground/70">Where your downloads are saved on disk.</p>
+				<p class="text-xs text-muted-foreground">Where your downloads are saved on disk.</p>
 				<div class="flex gap-2">
 					<Input value={settings.output_path} readonly class="flex-1 font-mono text-xs" />
 					<Button variant="secondary" size="sm" onclick={browse}>
@@ -93,14 +93,14 @@
 					spellcheck={false}
 				/>
 				{#if custom}
-					<p class="text-xs text-muted-foreground/70">
+					<p class="text-xs text-muted-foreground">
 						Fields: <span class="text-accent-cyan">{'{album.artist}'}</span>, {'{album.title}'},
 						{'{item.title}'}, {'{item.number}'}, {'{item.artist}'}, {'{playlist.title}'}. Use
 						<span class="text-accent-cyan">/</span> for folders, pad numbers like
 						<span class="text-accent-cyan">{'{item.number:02d}'}</span>.
 					</p>
 				{/if}
-				<p class="truncate text-xs text-muted-foreground/70">
+				<p class="truncate text-xs text-muted-foreground">
 					Preview: <span class="text-accent-cyan">{previewTemplate(settings.template)}</span>
 				</p>
 			</div>
@@ -109,7 +109,7 @@
 			<div class="flex items-center justify-between gap-4">
 				<div>
 					<Label for="subfolders" class="text-sm">Subfolder for each track</Label>
-					<p class="text-xs text-muted-foreground/70">
+					<p class="text-xs text-muted-foreground">
 						Single tracks get their own folder (albums &amp; playlists always do).
 					</p>
 				</div>
@@ -179,13 +179,16 @@
 			{/if}
 
 			<!-- About -->
-			<div class="flex flex-col gap-1 border-t border-foreground/10 pt-4 text-xs text-muted-foreground">
-				<div class="flex items-center justify-between">
-					<span class="text-sm font-semibold text-foreground">{APP_NAME}</span>
-					<span class="rounded-full border border-foreground/10 px-2 py-0.5">v{APP_VERSION}</span>
+			<div class="border-t border-foreground/10 pt-4">
+				<div class="mx-auto flex max-w-[15rem] flex-col items-center gap-1.5 rounded-xl border border-foreground/10 bg-foreground/5 px-5 py-4 text-center">
+					<span class="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">About</span>
+					<span class="text-base font-semibold text-foreground">{APP_NAME}</span>
+					<span class="rounded-full border border-foreground/10 px-2 py-0.5 text-xs text-muted-foreground">
+						v{APP_VERSION}
+					</span>
+					<span class="text-xs text-muted-foreground">by {APP_AUTHOR}</span>
+					<span class="text-xs text-muted-foreground italic">“{APP_TAGLINE}”</span>
 				</div>
-				<span>by {APP_AUTHOR}</span>
-				<span class="text-muted-foreground/60 italic">“{APP_TAGLINE}”</span>
 			</div>
 		</div>
 	</Dialog.Content>

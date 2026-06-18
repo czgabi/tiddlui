@@ -28,7 +28,9 @@ export const engine = {
 	tracklist: (url: string, requestId: number) =>
 		send({ cmd: 'tracklist', url, request_id: requestId }),
 	enqueue: (args: EnqueueArgs) => send({ cmd: 'enqueue', ...args }),
-	cancel: (jobId: string) => send({ cmd: 'cancel', job_id: jobId })
+	cancel: (jobId: string) => send({ cmd: 'cancel', job_id: jobId }),
+	resolveDuplicate: (jobId: string, action: 'cancel' | 'replace' | 'version') =>
+		send({ cmd: 'resolve_duplicate', job_id: jobId, action })
 };
 
 export const settingsApi = {

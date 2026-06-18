@@ -8,17 +8,23 @@ import type { Quality, Resource } from '$lib/types';
 
 export function startDownload(
 	url: string,
-	opts: { quality?: Quality; resource?: Resource } = {}
+	opts: { quality?: Quality; resource?: Resource; force?: boolean } = {}
 ): string | null {
-	if (!url.trim()) {
+	const target = url.trim();
+	if (!target) {
 		ui.notify('Paste a Tidal link or pick a search result first.', 'error');
+		return null;
+	}
+	// Don't queue the same thing twice (unless explicitly re-downloading).
+	if (!opts.force && downloads.items.some((i) => i.url === target)) {
+		ui.notify('That’s already in your queue or history.', 'info');
 		return null;
 	}
 	const id = crypto.randomUUID();
 	const quality = opts.quality ?? settings.quality;
 	downloads.add({
 		id,
-		url,
+		url: target,
 		quality,
 		status: 'queued',
 		progress: 0,
@@ -28,7 +34,7 @@ export function startDownload(
 	});
 	engine.enqueue({
 		job_id: id,
-		url,
+		url: target,
 		quality,
 		output_path: settings.output_path,
 		template: settings.template,

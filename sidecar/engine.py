@@ -27,6 +27,7 @@ class Engine:
         self.commands: asyncio.Queue[dict] = asyncio.Queue()
         self.jobs: asyncio.Queue[dict] = asyncio.Queue()
         self.cancelled: set[str] = set()
+        self.dup_futures: dict[str, asyncio.Future] = {}
         self.ffmpeg_ready = threading.Event()
 
     # ---- lifecycle -------------------------------------------------------
@@ -79,6 +80,10 @@ class Engine:
                 await self._enqueue(cmd)
             elif name == "cancel":
                 self.cancelled.add(cmd.get("job_id", ""))
+            elif name == "resolve_duplicate":
+                fut = self.dup_futures.get(cmd.get("job_id", ""))
+                if fut and not fut.done():
+                    fut.set_result(cmd.get("action", "cancel"))
             else:
                 log(f"unknown command: {name}", level="warning")
         except ApiError as exc:
@@ -147,6 +152,15 @@ class Engine:
         if rtype == "track" and not cmd.get("subfolders", False):
             template = "{item.title}"
 
+        async def on_duplicate(name: str) -> str:
+            fut: asyncio.Future = self.loop.create_future()
+            self.dup_futures[job_id] = fut
+            emit("duplicate_prompt", job_id=job_id, name=name)
+            try:
+                return await fut
+            finally:
+                self.dup_futures.pop(job_id, None)
+
         paths: list[str] = []
         for index, tj in enumerate(tracks):
             if job_id in self.cancelled:
@@ -161,6 +175,7 @@ class Engine:
                     track_progress = f.get("progress", 0.0)
                     emit("job_update", job_id=job_id, status="downloading",
                          progress=round((index + track_progress) / total, 4),
+                         track_progress=round(track_progress, 4),
                          completed=index, total=total,
                          current_title=tj.track.title,
                          current_artist=tj.track.artist.name if tj.track.artist else "",
@@ -174,7 +189,7 @@ class Engine:
 
             await downloader.download_job(
                 api, tj, cmd["quality"], cmd["output_path"], template,
-                job_id, relay, lambda: job_id in self.cancelled,
+                job_id, relay, lambda: job_id in self.cancelled, on_duplicate,
             )
 
         # Keep the original resource summary; just attach the final file path so

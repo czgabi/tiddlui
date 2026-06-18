@@ -109,7 +109,7 @@
 				? `Search or paste a Tidal link…  ${ui.mod}+K`
 				: 'Sign in to search Tidal'}
 			disabled={!auth.loggedIn}
-			class="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/70"
+			class="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
 		/>
 		{#if search.loading}
 			<Loader2 class="size-4 shrink-0 animate-spin text-accent-cyan" />
