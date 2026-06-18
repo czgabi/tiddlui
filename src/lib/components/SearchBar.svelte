@@ -3,6 +3,7 @@
 	import { engine } from '$lib/ipc/commands';
 	import { search } from '$lib/stores/search.svelte';
 	import { downloads } from '$lib/stores/download.svelte';
+	import { player } from '$lib/stores/player.svelte';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { ui } from '$lib/stores/ui.svelte';
 	import { startDownload } from '$lib/queue';
@@ -58,6 +59,9 @@
 		search.clear();
 		downloads.url = '';
 		downloads.selected = null;
+		downloads.tracklist = [];
+		downloads.tracklistUrl = null;
+		player.unload(); // stop playback + clear the loaded track
 		urlMode = false;
 		focus();
 	}

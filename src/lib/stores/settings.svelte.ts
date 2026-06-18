@@ -13,6 +13,7 @@ class SettingsStore {
 	quality = $state<Quality>('HIGH');
 	notify_on_complete = $state(true);
 	theme = $state(DEFAULT_THEME);
+	track_subfolders = $state(false);
 	loaded = $state(false);
 
 	async load() {
@@ -23,6 +24,7 @@ class SettingsStore {
 			this.quality = saved.quality ?? 'HIGH';
 			this.notify_on_complete = saved.notify_on_complete ?? true;
 			this.theme = saved.theme ?? DEFAULT_THEME;
+			this.track_subfolders = saved.track_subfolders ?? false;
 		}
 		applyTheme(this.theme);
 		if (!this.output_path) {
@@ -47,7 +49,8 @@ class SettingsStore {
 			template: this.template,
 			quality: this.quality,
 			notify_on_complete: this.notify_on_complete,
-			theme: this.theme
+			theme: this.theme,
+			track_subfolders: this.track_subfolders
 		};
 	}
 

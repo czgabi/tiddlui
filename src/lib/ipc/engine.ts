@@ -2,6 +2,7 @@
 // the Svelte stores, and primes initial state once the listeners are attached.
 
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
+import { getCurrentWindow, UserAttentionType } from '@tauri-apps/api/window';
 import {
 	isPermissionGranted,
 	requestPermission,
@@ -92,7 +93,7 @@ function handleJob(ev: EngineEvent) {
 
 	if (ev.status === 'complete') {
 		const item = downloads.items.find((i) => i.id === ev.job_id);
-		notifyDone(item);
+		announceDone(item);
 		// Load the finished track into the player so its waveform comes alive.
 		if (ev.path) player.load(ev.path, item?.resource?.title ?? item?.current_title ?? '');
 	} else if (ev.status === 'error') {
@@ -100,15 +101,27 @@ function handleJob(ev: EngineEvent) {
 	}
 }
 
-async function notifyDone(item?: QueueItem) {
+async function announceDone(item?: QueueItem) {
 	if (!settings.notify_on_complete || !item) return;
 	const title = item.resource?.title ?? item.current_title ?? 'Download';
+
+	// 1. in-app popup
+	ui.notify(`Downloaded: ${title}`);
+
+	// 2. flash the taskbar icon
+	try {
+		await getCurrentWindow().requestUserAttention(UserAttentionType.Critical);
+	} catch {
+		/* not supported everywhere */
+	}
+
+	// 3. OS notification
 	try {
 		let granted = await isPermissionGranted();
 		if (!granted) granted = (await requestPermission()) === 'granted';
 		if (granted) sendNotification({ title: 'Download complete', body: title });
 	} catch {
-		/* notifications are best-effort */
+		/* best-effort */
 	}
 }
 

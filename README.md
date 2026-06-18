@@ -1,14 +1,23 @@
-# Tiddl GUI
+# Tiddlui
 
 A modern, glassmorphic desktop app for downloading your Tidal library, built on
 the open-source [`tiddl`](https://github.com/oskvr37/tiddl) downloader. Search
-or paste a link, pick a quality, and download — with a live waveform player,
-collapsible queue/history, keyboard shortcuts, desktop notifications, and
-several color themes.
+or paste a link, pick a quality, and download — with a live seekable waveform
+player, collapsible queue/history, keyboard shortcuts, desktop notifications,
+and nine color themes. Windows-only for now (macOS/Linux later).
 
 > **For personal use only.** This tool downloads from your own paid Tidal
 > account. You are responsible for complying with Tidal's Terms of Service and
 > your local copyright laws. Not affiliated with Tidal.
+
+## Install (end users)
+
+Download the latest installer (`Tiddlui_x.y.z_x64-setup.exe`) from the
+[Releases](../../releases) page, run it, and launch **Tiddlui**. On first start
+it prompts you to sign in to Tidal (a short code + link). That's it.
+
+> Needs `ffmpeg`; if it isn't already on your system the app fetches a copy on
+> first run.
 
 ## Features
 
@@ -84,8 +93,9 @@ config directory; auth lives in `~/.tiddl-gui/auth.json`.
 
 ## Security notes
 
-- Auth tokens are stored unencrypted in `~/.tiddl-gui/auth.json` (same as the
-  `tiddl` CLI). Treat that file as a secret.
+- Auth tokens are stored in the **OS keychain** (Windows Credential Manager via
+  `keyring`) — never in plaintext. Any legacy `~/.tiddl-gui/auth.json` is
+  migrated into the keychain and deleted on first launch.
 - The webview can read local media only within a scoped set of directories
   (home/music/downloads/etc.) via Tauri's asset protocol, and talks to the
   engine exclusively over stdio — no arbitrary command execution from the UI.

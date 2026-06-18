@@ -119,12 +119,14 @@ async def download_job(
     # 4. Finalize container / extension.
     emit("job_update", job_id=job_id, status="processing", progress=0.999,
          quality_label=label)
+    # Append the extension rather than Path.with_suffix(), which would truncate
+    # titles containing a dot (e.g. "Mr. Brightside" -> "Mr.flac").
     if should_extract:
-        work = base.with_suffix(".audio")
+        work = base.parent / f"{base.name}.audio"
         shutil.move(tmp.name, work)
         final = await asyncio.to_thread(extract_flac, work)
     else:
-        final = base.with_suffix(".m4a")
+        final = base.parent / f"{base.name}.m4a"
         shutil.move(tmp.name, final)
 
     # 5. Cover art + metadata tags.

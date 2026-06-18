@@ -84,6 +84,7 @@ export interface AppSettings {
 	quality: Quality;
 	notify_on_complete: boolean;
 	theme: string;
+	track_subfolders: boolean;
 }
 
 export interface FfmpegStatus {

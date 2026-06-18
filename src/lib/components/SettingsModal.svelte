@@ -13,15 +13,26 @@
 	import { engine } from '$lib/ipc/commands';
 	import { TEMPLATE_PRESETS, previewTemplate } from '$lib/templates';
 	import { THEMES } from '$lib/themes';
+	import { APP_NAME, APP_VERSION, APP_AUTHOR, APP_TAGLINE } from '$lib/about';
 
 	let { open = $bindable(false) }: { open?: boolean } = $props();
+
+	let custom = $state(false);
+	$effect(() => {
+		// non-standard saved template → start in custom (editable) mode
+		if (settings.loaded && !TEMPLATE_PRESETS.some((p) => p.value === settings.template)) {
+			custom = true;
+		}
+	});
 
 	const presetValue = $derived(
 		TEMPLATE_PRESETS.find((p) => p.value === settings.template)?.value ?? 'custom'
 	);
-	const presetLabel = $derived(
-		TEMPLATE_PRESETS.find((p) => p.value === presetValue)?.label ?? 'Custom'
+	const selectValue = $derived(custom ? 'custom' : presetValue);
+	const selectLabel = $derived(
+		custom ? 'Custom' : (TEMPLATE_PRESETS.find((p) => p.value === presetValue)?.label ?? 'Custom')
 	);
+	const currentTheme = $derived(THEMES.find((t) => t.id === settings.theme) ?? THEMES[0]);
 
 	async function browse() {
 		const dir = await openDialog({ directory: true, defaultPath: settings.output_path || undefined });
@@ -32,7 +43,10 @@
 	}
 
 	function onPreset(value: string) {
-		if (value !== 'custom') {
+		if (value === 'custom') {
+			custom = true;
+		} else {
+			custom = false;
 			settings.template = value;
 			settings.save();
 		}
@@ -46,10 +60,11 @@
 			<Dialog.Description>Preferences are saved automatically.</Dialog.Description>
 		</Dialog.Header>
 
-		<div class="flex flex-col gap-5 py-2">
+		<div class="flex max-h-[70vh] flex-col gap-5 overflow-y-auto py-2 pr-1">
 			<!-- Output folder -->
 			<div class="flex flex-col gap-2">
-				<Label class="text-xs tracking-wide text-muted-foreground uppercase">Output folder</Label>
+				<Label class="text-xs tracking-wide text-muted-foreground uppercase">Download folder</Label>
+				<p class="text-xs text-muted-foreground/70">Where your downloads are saved on disk.</p>
 				<div class="flex gap-2">
 					<Input value={settings.output_path} readonly class="flex-1 font-mono text-xs" />
 					<Button variant="secondary" size="sm" onclick={browse}>
@@ -61,8 +76,8 @@
 			<!-- Template -->
 			<div class="flex flex-col gap-2">
 				<Label class="text-xs tracking-wide text-muted-foreground uppercase">Filename template</Label>
-				<Select.Root type="single" value={presetValue} onValueChange={onPreset}>
-					<Select.Trigger class="w-full">{presetLabel}</Select.Trigger>
+				<Select.Root type="single" value={selectValue} onValueChange={onPreset}>
+					<Select.Trigger class="w-full">{selectLabel}</Select.Trigger>
 					<Select.Content>
 						{#each TEMPLATE_PRESETS as p (p.value)}
 							<Select.Item value={p.value} label={p.label}>{p.label}</Select.Item>
@@ -72,36 +87,71 @@
 				</Select.Root>
 				<Input
 					bind:value={settings.template}
-					oninput={() => settings.save()}
-					class="font-mono text-xs"
+					readonly={!custom}
+					oninput={() => custom && settings.save()}
+					class="font-mono text-xs {custom ? '' : 'opacity-60'}"
 					spellcheck={false}
 				/>
+				{#if custom}
+					<p class="text-xs text-muted-foreground/70">
+						Fields: <span class="text-accent-cyan">{'{album.artist}'}</span>, {'{album.title}'},
+						{'{item.title}'}, {'{item.number}'}, {'{item.artist}'}, {'{playlist.title}'}. Use
+						<span class="text-accent-cyan">/</span> for folders, pad numbers like
+						<span class="text-accent-cyan">{'{item.number:02d}'}</span>.
+					</p>
+				{/if}
 				<p class="truncate text-xs text-muted-foreground/70">
 					Preview: <span class="text-accent-cyan">{previewTemplate(settings.template)}</span>
 				</p>
 			</div>
 
+			<!-- Subfolder toggle -->
+			<div class="flex items-center justify-between gap-4">
+				<div>
+					<Label for="subfolders" class="text-sm">Subfolder for each track</Label>
+					<p class="text-xs text-muted-foreground/70">
+						Single tracks get their own folder (albums &amp; playlists always do).
+					</p>
+				</div>
+				<Switch
+					id="subfolders"
+					checked={settings.track_subfolders}
+					onCheckedChange={(v) => {
+						settings.track_subfolders = v;
+						settings.save();
+					}}
+				/>
+			</div>
+
 			<!-- Theme -->
 			<div class="flex flex-col gap-2">
 				<Label class="text-xs tracking-wide text-muted-foreground uppercase">Theme</Label>
-				<div class="grid grid-cols-3 gap-2">
-					{#each THEMES as t (t.id)}
-						<button
-							onclick={() => settings.setTheme(t.id)}
-							class="flex flex-col gap-2 rounded-lg border p-2 text-left transition-colors {settings.theme ===
-							t.id
-								? 'border-accent-cyan bg-foreground/5'
-								: 'border-foreground/10 hover:bg-foreground/5'}"
-						>
-							<div class="flex h-8 overflow-hidden rounded-md ring-1 ring-foreground/10">
-								<span class="flex-1" style="background:{t.swatch[0]}"></span>
-								<span class="flex-1" style="background:{t.swatch[1]}"></span>
-								<span class="flex-1" style="background:{t.swatch[2]}"></span>
-							</div>
-							<span class="text-xs font-medium text-foreground">{t.label}</span>
-						</button>
-					{/each}
-				</div>
+				<Select.Root type="single" value={settings.theme} onValueChange={(v) => settings.setTheme(v)}>
+					<Select.Trigger class="w-full">
+						<span class="flex items-center gap-2">
+							<span class="flex overflow-hidden rounded ring-1 ring-foreground/15">
+								{#each currentTheme.swatch as c (c)}
+									<span class="size-3" style="background:{c}"></span>
+								{/each}
+							</span>
+							{currentTheme.label}
+						</span>
+					</Select.Trigger>
+					<Select.Content>
+						{#each THEMES as t (t.id)}
+							<Select.Item value={t.id} label={t.label}>
+								<span class="flex w-full items-center justify-between gap-4">
+									<span>{t.label}</span>
+									<span class="flex overflow-hidden rounded ring-1 ring-foreground/15">
+										{#each t.swatch as c (c)}
+											<span class="size-3.5" style="background:{c}"></span>
+										{/each}
+									</span>
+								</span>
+							</Select.Item>
+						{/each}
+					</Select.Content>
+				</Select.Root>
 			</div>
 
 			<!-- Notifications -->
@@ -127,6 +177,16 @@
 					</Button>
 				</div>
 			{/if}
+
+			<!-- About -->
+			<div class="flex flex-col gap-1 border-t border-foreground/10 pt-4 text-xs text-muted-foreground">
+				<div class="flex items-center justify-between">
+					<span class="text-sm font-semibold text-foreground">{APP_NAME}</span>
+					<span class="rounded-full border border-foreground/10 px-2 py-0.5">v{APP_VERSION}</span>
+				</div>
+				<span>by {APP_AUTHOR}</span>
+				<span class="text-muted-foreground/60 italic">“{APP_TAGLINE}”</span>
+			</div>
 		</div>
 	</Dialog.Content>
 </Dialog.Root>

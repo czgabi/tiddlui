@@ -15,7 +15,7 @@ from typing import Any
 import downloader
 import ffmpeg
 from protocol import emit, log, read_commands
-from resolver import do_search, expand_jobs, resolve_summary, track_listing
+from resolver import do_search, expand_jobs, parse_resource, resolve_summary, track_listing
 from serialize import cover_url
 from session import ApiError, Session
 
@@ -140,6 +140,13 @@ class Engine:
             emit("job_update", job_id=job_id, status="error", message="nothing to download")
             return
 
+        # Single tracks go flat into the output folder unless the user enabled
+        # per-track subfolders. Albums/playlists always use the template.
+        rtype, _ = parse_resource(cmd["url"])
+        template = cmd["template"]
+        if rtype == "track" and not cmd.get("subfolders", False):
+            template = "{item.title}"
+
         paths: list[str] = []
         for index, tj in enumerate(tracks):
             if job_id in self.cancelled:
@@ -166,7 +173,7 @@ class Engine:
                     log(f"track failed: {tj.track.title}: {f.get('message')}", "error")
 
             await downloader.download_job(
-                api, tj, cmd["quality"], cmd["output_path"], cmd["template"],
+                api, tj, cmd["quality"], cmd["output_path"], template,
                 job_id, relay, lambda: job_id in self.cancelled,
             )
 

@@ -172,8 +172,10 @@ body {
    everything reskins automatically. Theme blocks come after the base so they
    win the cascade. `.dark` is toggled by JS only for dark themes. */
 
-/* dark — clean neutral slate */
-[data-theme='dark'] {
+/* ---- dark themes -------------------------------------------------------- */
+
+/* slate — clean neutral blue-grey dark */
+[data-theme='slate'] {
   --background: #0f1419;
   --foreground: #e6eaf0;
   --card: rgba(255, 255, 255, 0.04);
@@ -201,83 +203,202 @@ body {
   --bd3: rgba(94, 234, 212, 0.06);
 }
 
-/* ultradark — OLED black, minimal accent */
-[data-theme='ultradark'] {
+/* obsidian — true OLED black */
+[data-theme='obsidian'] {
   --background: #000000;
-  --foreground: #c8ccd2;
+  --foreground: #d4d8de;
   --card: rgba(255, 255, 255, 0.03);
   --popover: #0a0a0a;
-  --popover-foreground: #c8ccd2;
-  --primary: #d4d4d8;
-  --primary-foreground: #0a0a0a;
+  --popover-foreground: #d4d8de;
+  --primary: #5eead4;
+  --primary-foreground: #06201c;
   --secondary: rgba(255, 255, 255, 0.05);
-  --secondary-foreground: #c8ccd2;
-  --muted-foreground: #6b7280;
-  --accent: rgba(255, 255, 255, 0.06);
-  --border: rgba(255, 255, 255, 0.06);
+  --secondary-foreground: #d4d8de;
+  --muted-foreground: #71767f;
+  --accent: rgba(94, 234, 212, 0.12);
+  --border: rgba(255, 255, 255, 0.07);
   --input: rgba(255, 255, 255, 0.05);
   --ring: #5eead4;
   --glass-bg: rgba(255, 255, 255, 0.025);
   --glass-bg-strong: rgba(255, 255, 255, 0.05);
   --glass-border: rgba(255, 255, 255, 0.06);
-  --glass-blur: 12px;
-  --accent-cyan: #7dd3c0;
-  --accent-purple: #9aa0ab;
-  --accent-pink: #9ca3af;
+  --glass-blur: 10px;
+  --accent-cyan: #5eead4;
+  --accent-purple: #818cf8;
+  --accent-pink: #f472b6;
   --accent-teal: #5eead4;
-  --bd1: rgba(94, 234, 212, 0.05);
-  --bd2: rgba(255, 255, 255, 0.03);
+  --bd1: rgba(94, 234, 212, 0.06);
+  --bd2: rgba(129, 140, 248, 0.05);
   --bd3: rgba(255, 255, 255, 0);
   --scrollbar: rgba(255, 255, 255, 0.1);
   --scrollbar-hover: rgba(255, 255, 255, 0.18);
 }
 
-/* aero — frutiger-aero light glass */
-[data-theme='aero'] {
+/* nebula — deep purple + magenta dark */
+[data-theme='nebula'] {
+  --background: #0d0a1f;
+  --foreground: #e7e3f5;
+  --card: rgba(255, 255, 255, 0.04);
+  --popover: #161232;
+  --popover-foreground: #e7e3f5;
+  --primary: #a855f7;
+  --primary-foreground: #1a0a2e;
+  --secondary: rgba(255, 255, 255, 0.06);
+  --secondary-foreground: #e7e3f5;
+  --muted-foreground: #a59bc4;
+  --accent: rgba(168, 85, 247, 0.18);
+  --border: rgba(168, 130, 255, 0.14);
+  --input: rgba(255, 255, 255, 0.06);
+  --ring: #a855f7;
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-bg-strong: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(168, 130, 255, 0.16);
+  --glass-blur: 16px;
+  --accent-cyan: #c084fc;
+  --accent-purple: #a855f7;
+  --accent-pink: #ec4899;
+  --accent-teal: #818cf8;
+  --bd1: rgba(168, 85, 247, 0.18);
+  --bd2: rgba(236, 72, 153, 0.14);
+  --bd3: rgba(99, 102, 241, 0.12);
+}
+
+/* ---- light / frutiger-aero themes -------------------------------------- */
+
+/* aqua — sky-blue glass */
+[data-theme='aqua'] {
   --background: #e8f3ff;
   --foreground: #0c2438;
   --card: rgba(255, 255, 255, 0.45);
   --card-foreground: #0c2438;
-  --popover: rgba(255, 255, 255, 0.9);
+  --popover: rgba(255, 255, 255, 0.92);
   --popover-foreground: #0c2438;
   --primary: #0ea5e9;
   --primary-foreground: #ffffff;
   --secondary: rgba(255, 255, 255, 0.55);
   --secondary-foreground: #0c2438;
   --muted: rgba(255, 255, 255, 0.4);
-  --muted-foreground: #4b6478;
+  --muted-foreground: #42647e;
   --accent: rgba(14, 165, 233, 0.15);
   --accent-foreground: #0c2438;
-  --border: rgba(255, 255, 255, 0.7);
+  --border: rgba(255, 255, 255, 0.72);
   --input: rgba(255, 255, 255, 0.6);
   --ring: #0ea5e9;
   --glass-bg: rgba(255, 255, 255, 0.5);
   --glass-bg-strong: rgba(255, 255, 255, 0.72);
-  --glass-border: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.78);
   --glass-blur: 18px;
-  --accent-cyan: #06b6d4;
-  --accent-purple: #6366f1;
-  --accent-pink: #ec4899;
-  --accent-teal: #10b981;
-  --bd1: rgba(56, 189, 248, 0.32);
-  --bd2: rgba(16, 185, 129, 0.22);
-  --bd3: rgba(168, 219, 255, 0.4);
+  --accent-cyan: #0ea5e9;
+  --accent-purple: #3b82f6;
+  --accent-pink: #06b6d4;
+  --accent-teal: #22d3ee;
+  --bd1: rgba(56, 189, 248, 0.34);
+  --bd2: rgba(59, 130, 246, 0.2);
+  --bd3: rgba(168, 219, 255, 0.42);
   --scrollbar: rgba(12, 36, 56, 0.25);
   --scrollbar-hover: rgba(12, 36, 56, 0.4);
 }
-/* glossy refraction for aero glass */
-[data-theme='aero'] .glass {
-  background-image: linear-gradient(
-    160deg,
-    rgba(255, 255, 255, 0.55),
-    rgba(255, 255, 255, 0.12) 45%,
-    rgba(255, 255, 255, 0.28)
-  );
-  backdrop-filter: blur(var(--glass-blur)) saturate(1.5);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.5);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.7),
-    0 8px 30px rgba(12, 74, 110, 0.12);
+
+/* verdant — mint-green glass */
+[data-theme='verdant'] {
+  --background: #e9fbf0;
+  --foreground: #0c2a1c;
+  --card: rgba(255, 255, 255, 0.45);
+  --card-foreground: #0c2a1c;
+  --popover: rgba(255, 255, 255, 0.92);
+  --popover-foreground: #0c2a1c;
+  --primary: #10b981;
+  --primary-foreground: #04241a;
+  --secondary: rgba(255, 255, 255, 0.55);
+  --secondary-foreground: #0c2a1c;
+  --muted: rgba(255, 255, 255, 0.4);
+  --muted-foreground: #3f6b54;
+  --accent: rgba(16, 185, 129, 0.16);
+  --accent-foreground: #0c2a1c;
+  --border: rgba(255, 255, 255, 0.72);
+  --input: rgba(255, 255, 255, 0.6);
+  --ring: #10b981;
+  --glass-bg: rgba(255, 255, 255, 0.5);
+  --glass-bg-strong: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.78);
+  --glass-blur: 18px;
+  --accent-cyan: #10b981;
+  --accent-purple: #22d3ee;
+  --accent-pink: #84cc16;
+  --accent-teal: #34d399;
+  --bd1: rgba(52, 211, 153, 0.32);
+  --bd2: rgba(34, 211, 238, 0.22);
+  --bd3: rgba(190, 242, 210, 0.42);
+  --scrollbar: rgba(12, 42, 28, 0.22);
+  --scrollbar-hover: rgba(12, 42, 28, 0.38);
+}
+
+/* mercury — brushed silver / chrome */
+[data-theme='mercury'] {
+  --background: #eef1f5;
+  --foreground: #1f2733;
+  --card: rgba(255, 255, 255, 0.5);
+  --card-foreground: #1f2733;
+  --popover: rgba(255, 255, 255, 0.94);
+  --popover-foreground: #1f2733;
+  --primary: #475569;
+  --primary-foreground: #ffffff;
+  --secondary: rgba(255, 255, 255, 0.6);
+  --secondary-foreground: #1f2733;
+  --muted: rgba(255, 255, 255, 0.45);
+  --muted-foreground: #64748b;
+  --accent: rgba(100, 116, 139, 0.15);
+  --accent-foreground: #1f2733;
+  --border: rgba(255, 255, 255, 0.8);
+  --input: rgba(255, 255, 255, 0.65);
+  --ring: #64748b;
+  --glass-bg: rgba(255, 255, 255, 0.55);
+  --glass-bg-strong: rgba(255, 255, 255, 0.78);
+  --glass-border: rgba(255, 255, 255, 0.85);
+  --glass-blur: 18px;
+  --accent-cyan: #0ea5e9;
+  --accent-purple: #64748b;
+  --accent-pink: #94a3b8;
+  --accent-teal: #22d3ee;
+  --bd1: rgba(148, 163, 184, 0.3);
+  --bd2: rgba(203, 213, 225, 0.4);
+  --bd3: rgba(226, 232, 240, 0.5);
+  --scrollbar: rgba(30, 41, 59, 0.2);
+  --scrollbar-hover: rgba(30, 41, 59, 0.34);
+}
+
+/* tangerine — warm orange cream */
+[data-theme='tangerine'] {
+  --background: #fff6ec;
+  --foreground: #3a2310;
+  --card: rgba(255, 255, 255, 0.5);
+  --card-foreground: #3a2310;
+  --popover: rgba(255, 255, 255, 0.94);
+  --popover-foreground: #3a2310;
+  --primary: #fb923c;
+  --primary-foreground: #3a1404;
+  --secondary: rgba(255, 255, 255, 0.6);
+  --secondary-foreground: #3a2310;
+  --muted: rgba(255, 255, 255, 0.45);
+  --muted-foreground: #8a6a4a;
+  --accent: rgba(251, 146, 60, 0.16);
+  --accent-foreground: #3a2310;
+  --border: rgba(220, 150, 80, 0.22);
+  --input: rgba(255, 255, 255, 0.65);
+  --ring: #fb923c;
+  --glass-bg: rgba(255, 255, 255, 0.52);
+  --glass-bg-strong: rgba(255, 255, 255, 0.74);
+  --glass-border: rgba(255, 255, 255, 0.72);
+  --glass-blur: 16px;
+  --accent-cyan: #f59e0b;
+  --accent-purple: #fb923c;
+  --accent-pink: #f97316;
+  --accent-teal: #fbbf24;
+  --bd1: rgba(251, 146, 60, 0.3);
+  --bd2: rgba(245, 158, 11, 0.22);
+  --bd3: rgba(255, 224, 178, 0.4);
+  --scrollbar: rgba(90, 50, 15, 0.22);
+  --scrollbar-hover: rgba(90, 50, 15, 0.38);
 }
 
 /* paper — flat white, almost no accent */
@@ -314,36 +435,20 @@ body {
   --scrollbar-hover: rgba(0, 0, 0, 0.32);
 }
 
-/* citrus — soft orange + teal, warm light */
-[data-theme='citrus'] {
-  --background: #fff8f1;
-  --foreground: #2b1d12;
-  --card: rgba(255, 255, 255, 0.5);
-  --card-foreground: #2b1d12;
-  --popover: #fffaf4;
-  --popover-foreground: #2b1d12;
-  --primary: #fb923c;
-  --primary-foreground: #2b1206;
-  --secondary: rgba(255, 255, 255, 0.55);
-  --secondary-foreground: #2b1d12;
-  --muted: rgba(255, 255, 255, 0.4);
-  --muted-foreground: #7c6650;
-  --accent: rgba(20, 184, 166, 0.15);
-  --accent-foreground: #14302c;
-  --border: rgba(180, 120, 60, 0.2);
-  --input: rgba(255, 255, 255, 0.6);
-  --ring: #fb923c;
-  --glass-bg: rgba(255, 255, 255, 0.5);
-  --glass-bg-strong: rgba(255, 255, 255, 0.72);
-  --glass-border: rgba(255, 255, 255, 0.7);
-  --glass-blur: 16px;
-  --accent-cyan: #14b8a6;
-  --accent-purple: #fb923c;
-  --accent-pink: #fb7185;
-  --accent-teal: #14b8a6;
-  --bd1: rgba(251, 146, 60, 0.26);
-  --bd2: rgba(20, 184, 166, 0.22);
-  --bd3: rgba(255, 224, 178, 0.32);
-  --scrollbar: rgba(80, 50, 20, 0.25);
-  --scrollbar-hover: rgba(80, 50, 20, 0.4);
+/* glossy frutiger-aero refraction for the light glass themes */
+[data-theme='aqua'] .glass,
+[data-theme='verdant'] .glass,
+[data-theme='mercury'] .glass,
+[data-theme='tangerine'] .glass {
+  background-image: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.55),
+    rgba(255, 255, 255, 0.12) 45%,
+    rgba(255, 255, 255, 0.28)
+  );
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.5);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 8px 30px rgba(20, 40, 70, 0.1);
 }

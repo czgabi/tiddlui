@@ -31,7 +31,8 @@ export function startDownload(
 		url,
 		quality,
 		output_path: settings.output_path,
-		template: settings.template
+		template: settings.template,
+		subfolders: settings.track_subfolders
 	});
 	return id;
 }

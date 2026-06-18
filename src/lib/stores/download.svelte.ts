@@ -28,6 +28,11 @@ class DownloadStore {
 		this.items = this.items.filter((i) => i.id !== id);
 	}
 
+	/** Remove finished/failed/cancelled items (the History section). */
+	clearHistory() {
+		this.items = this.items.filter((i) => !DONE.has(i.status));
+	}
+
 	get active(): QueueItem | undefined {
 		return this.items.find((i) => !DONE.has(i.status));
 	}

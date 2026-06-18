@@ -18,7 +18,9 @@ Write-Host "Building tiddl-engine for $triple ..."
 python -m PyInstaller --onefile --noconfirm --clean --name tiddl-engine `
   --collect-submodules tiddl.core `
   --copy-metadata tiddl `
+  --collect-all keyring `
   --hidden-import=aiohttp --hidden-import=yarl --hidden-import=multidict `
+  --hidden-import=keyring.backends.Windows `
   --distpath ./dist --workpath ./build_pyi --specpath . `
   engine.py
 

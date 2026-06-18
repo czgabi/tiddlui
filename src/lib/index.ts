@@ -1,2 +1,0 @@
-// barrel for $lib
-export {};

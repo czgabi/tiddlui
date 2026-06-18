@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Disc3, Music2, ListMusic, User, Play, Pause, Volume2, VolumeX, Download, BadgeCheck } from '@lucide/svelte';
+	import { Disc3, Music2, ListMusic, User, Play, Pause, Volume2, VolumeX, Download, BadgeCheck, Loader2 } from '@lucide/svelte';
 	import WaveformSeek from '$lib/components/WaveformSeek.svelte';
 	import { downloads } from '$lib/stores/download.svelte';
 	import { player } from '$lib/stores/player.svelte';
@@ -156,7 +156,13 @@
 						{formatDuration(player.currentTime)} / {formatDuration(player.duration)}
 					</span>
 				</div>
-				<WaveformSeek />
+				{#if player.analyzing}
+					<div class="flex h-11 items-center justify-center gap-2 text-xs text-muted-foreground">
+						<Loader2 class="size-4 animate-spin text-accent-cyan" /> Analyzing waveform…
+					</div>
+				{:else}
+					<WaveformSeek />
+				{/if}
 			</div>
 		{/if}
 	</div>

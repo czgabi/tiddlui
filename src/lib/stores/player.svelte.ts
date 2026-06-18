@@ -11,7 +11,7 @@ class PlayerStore {
 	path = $state<string | null>(null);
 	title = $state('');
 	playing = $state(false);
-	muted = $state(true);
+	muted = $state(false);
 	currentTime = $state(0);
 	duration = $state(0);
 	analysis = $state<AudioAnalysis | null>(null);
@@ -59,7 +59,7 @@ class PlayerStore {
 		const src = convertFileSrc(path);
 		a.src = src;
 		a.muted = this.muted;
-		a.play().catch(() => {}); // muted autoplay is permitted
+		// No autoplay — the user presses play. Waveform shows once analyzed.
 
 		this.analyzing = true;
 		try {

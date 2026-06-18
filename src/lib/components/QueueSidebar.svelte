@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ChevronRight, X, FolderOpen, RotateCw, Download, CheckCircle2, AlertCircle, Play } from '@lucide/svelte';
+	import { ChevronRight, X, FolderOpen, RotateCw, Download, CheckCircle2, AlertCircle, Play, Trash2 } from '@lucide/svelte';
 	import { revealItemInDir } from '@tauri-apps/plugin-opener';
 	import { downloads } from '$lib/stores/download.svelte';
 	import { player } from '$lib/stores/player.svelte';
@@ -96,9 +96,19 @@
 			{/if}
 
 			<section>
-				<h3 class="px-1 pb-2 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
-					History
-				</h3>
+				<div class="flex items-center justify-between px-1 pb-2">
+					<h3 class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">History</h3>
+					{#if downloads.history.length}
+						<button
+							onclick={() => downloads.clearHistory()}
+							title="Clear history"
+							aria-label="Clear history"
+							class="text-muted-foreground hover:text-destructive"
+						>
+							<Trash2 class="size-3.5" />
+						</button>
+					{/if}
+				</div>
 				{#if downloads.history.length === 0}
 					<p class="px-1 text-xs text-muted-foreground/60">No downloads yet.</p>
 				{/if}

@@ -1,4 +1,5 @@
 # Build-time deps for the engine sidecar (Python >= 3.13).
 # tiddl pulls in aiohttp, pydantic, mutagen, m3u8, requests, requests-cache, etc.
 tiddl==3.4.3
+keyring>=24            # OS keychain storage for the auth token (no plaintext)
 pyinstaller>=6.0

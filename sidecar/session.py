@@ -1,7 +1,9 @@
 """Authentication + Tidal API session, built on tiddl.core only.
 
 We deliberately avoid tiddl.cli so the engine depends solely on the stable core
-package. Auth state lives in ``~/.tiddl-gui/auth.json`` (GUI-owned, per spec).
+package. Auth tokens are stored in the OS keychain (Windows Credential Manager
+via `keyring`) — never in plaintext. Only the non-secret HTTP cache lives on
+disk under ``~/.tiddl-gui``.
 """
 
 from __future__ import annotations
@@ -11,6 +13,8 @@ import time
 from pathlib import Path
 from typing import Optional
 
+import keyring
+
 from tiddl.core.api import ApiError, TidalAPI
 from tiddl.core.api.client import TidalClient
 from tiddl.core.auth import AuthAPI, AuthClientError
@@ -18,8 +22,11 @@ from tiddl.core.auth import AuthAPI, AuthClientError
 from protocol import emit, log
 
 APP_DIR = Path.home() / ".tiddl-gui"
-AUTH_FILE = APP_DIR / "auth.json"
 CACHE_NAME = str(APP_DIR / "http_cache")
+
+KEYRING_SERVICE = "Tiddlui"
+KEYRING_USER = "tidal-auth"
+LEGACY_AUTH_FILE = APP_DIR / "auth.json"  # migrated into the keychain on load
 
 
 class Session:
@@ -28,15 +35,34 @@ class Session:
         self._auth = self._load()
         self._api: Optional[TidalAPI] = None
 
-    # ---- persistence -----------------------------------------------------
+    # ---- persistence (OS keychain) ---------------------------------------
     def _load(self) -> dict:
+        # One-time migration: move any legacy plaintext file into the keychain.
+        if LEGACY_AUTH_FILE.exists():
+            try:
+                data = json.loads(LEGACY_AUTH_FILE.read_text())
+            except (json.JSONDecodeError, OSError):
+                data = {}
+            self._auth = data
+            if data:
+                self._save()
+            try:
+                LEGACY_AUTH_FILE.unlink()
+            except OSError:
+                pass
+            return data
         try:
-            return json.loads(AUTH_FILE.read_text())
-        except (FileNotFoundError, json.JSONDecodeError):
+            raw = keyring.get_password(KEYRING_SERVICE, KEYRING_USER)
+            return json.loads(raw) if raw else {}
+        except Exception as exc:  # noqa: BLE001
+            log(f"keyring load failed: {exc}", level="error")
             return {}
 
     def _save(self) -> None:
-        AUTH_FILE.write_text(json.dumps(self._auth))
+        try:
+            keyring.set_password(KEYRING_SERVICE, KEYRING_USER, json.dumps(self._auth))
+        except Exception as exc:  # noqa: BLE001
+            log(f"keyring save failed: {exc}", level="error")
 
     @property
     def logged_in(self) -> bool:
@@ -144,8 +170,8 @@ class Session:
         self._auth = {}
         self._api = None
         try:
-            AUTH_FILE.unlink()
-        except FileNotFoundError:
+            keyring.delete_password(KEYRING_SERVICE, KEYRING_USER)
+        except Exception:  # noqa: BLE001 — already absent is fine
             pass
         self.emit_status()
 

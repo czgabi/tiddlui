@@ -13,6 +13,7 @@ export interface EnqueueArgs {
 	quality: Quality;
 	output_path: string;
 	template: string;
+	subfolders: boolean;
 }
 
 export const engine = {

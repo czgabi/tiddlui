@@ -111,7 +111,7 @@
 	<header class="flex items-center gap-3">
 		<div class="flex items-center gap-2 pr-1">
 			<Disc3 class="size-6 text-accent-cyan" />
-			<span class="text-gradient text-lg font-semibold tracking-tight">Tiddl</span>
+			<span class="text-gradient text-lg font-semibold tracking-tight">Tiddlui</span>
 		</div>
 		<div class="flex-1"><SearchBar bind:this={searchBar} /></div>
 		{#if auth.loggedIn}
@@ -133,10 +133,13 @@
 
 			<!-- Controls -->
 			<div class="glass flex items-center gap-4 p-4">
-				<Button variant="secondary" size="sm" onclick={browse} title={settings.output_path}>
-					<FolderOpen class="size-4" />
-					<span class="max-w-[12rem] truncate">{settings.output_path || 'Choose folder'}</span>
-				</Button>
+				<div class="flex items-center gap-2">
+					<span class="text-[11px] font-medium tracking-wide text-muted-foreground/70 uppercase">Save to</span>
+					<Button variant="secondary" size="sm" onclick={browse} title="Choose where downloads are saved">
+						<FolderOpen class="size-4" />
+						<span class="max-w-[12rem] truncate">{settings.output_path || 'Choose folder'}</span>
+					</Button>
+				</div>
 				<div class="flex-1"><QualitySlider bind:value={settings.quality} /></div>
 				{#if downloads.active}
 					<Button variant="secondary" onclick={stop}>
