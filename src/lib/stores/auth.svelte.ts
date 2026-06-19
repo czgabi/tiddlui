@@ -4,6 +4,9 @@ class AuthStore {
 	loggedIn = $state(false);
 	user = $state<string | null>(null);
 	countryCode = $state<string | null>(null);
+	// becomes true once the engine has reported the initial auth state, so the
+	// UI doesn't flash the login dialog before we know if a session exists
+	checked = $state(false);
 
 	// device-flow login
 	pending = $state(false);
@@ -16,6 +19,7 @@ class AuthStore {
 		this.loggedIn = loggedIn;
 		this.user = user;
 		this.countryCode = country;
+		this.checked = true;
 		if (loggedIn) this.reset();
 	}
 

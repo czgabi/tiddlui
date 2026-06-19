@@ -47,9 +47,11 @@
 		}
 	}
 
-	// Force sign-in whenever signed out (startup or after logout).
+	// Force sign-in whenever signed out — but only after the engine has reported
+	// the initial auth state, so we never flash the login on a valid session.
 	$effect(() => {
-		if (ui.engineReady && !auth.loggedIn) authOpen = true;
+		if (auth.checked && !auth.loggedIn) authOpen = true;
+		else if (auth.loggedIn) authOpen = false;
 	});
 
 	onMount(() => {
