@@ -1,0 +1,17 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0c0c15" />
+      <stop offset="1" stop-color="#181030" />
+    </linearGradient>
+    <linearGradient id="accent" x1="247" y1="300" x2="777" y2="770" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00d9ff" />
+      <stop offset="1" stop-color="#7c3aed" />
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="1024" height="1024" rx="232" fill="url(#bg)" />
+  <rect x="6" y="6" width="1012" height="1012" rx="228" fill="none" stroke="#ffffff" stroke-opacity="0.06" stroke-width="2" />
+  <!-- T monogram -->
+  <rect x="247" y="300" width="530" height="132" rx="34" fill="url(#accent)" />
+  <rect x="446" y="300" width="132" height="470" rx="34" fill="url(#accent)" />
+</svg>
