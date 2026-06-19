@@ -33,6 +33,7 @@
     "@types/node": "^25.9.3",
     "bits-ui": "^2.18.1",
     "clsx": "^2.1.1",
+    "sharp": "^0.35.1",
     "svelte": "^5.0.0",
     "svelte-check": "^4.0.0",
     "tailwind-merge": "^3.6.0",
