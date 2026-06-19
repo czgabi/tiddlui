@@ -82,7 +82,7 @@
 	function itemsFor(kind: ResourceKind): Resource[] {
 		const r = search.results;
 		if (!r) return [];
-		return (r[`${kind}s` as 'tracks' | 'albums' | 'playlists' | 'artists'] ?? []).slice(0, 5);
+		return (r[`${kind}s` as 'tracks' | 'albums' | 'playlists' | 'artists'] ?? []).slice(0, 6);
 	}
 </script>
 
@@ -122,7 +122,7 @@
 
 	{#if search.open && search.hasResults}
 		<div
-			class="glass glass-strong absolute top-[calc(100%+0.5rem)] z-50 max-h-[60vh] w-full overflow-y-auto p-2 shadow-2xl"
+			class="absolute top-[calc(100%+0.5rem)] z-50 max-h-[60vh] w-full overflow-y-auto rounded-xl border border-foreground/10 bg-popover/95 p-2 shadow-2xl backdrop-blur-xl"
 		>
 			{#each groups as g (g.key)}
 				{@const items = itemsFor(g.key)}

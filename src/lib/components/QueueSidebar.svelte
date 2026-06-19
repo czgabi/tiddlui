@@ -1,11 +1,10 @@
 <script lang="ts">
-	import { ChevronRight, X, FolderOpen, RotateCw, Download, CheckCircle2, AlertCircle, Trash2 } from '@lucide/svelte';
+	import { ChevronRight, X, FolderOpen, Download, CheckCircle2, AlertCircle, Trash2 } from '@lucide/svelte';
 	import { revealItemInDir } from '@tauri-apps/plugin-opener';
 	import { downloads } from '$lib/stores/download.svelte';
 	import { player } from '$lib/stores/player.svelte';
 	import { ui } from '$lib/stores/ui.svelte';
 	import { engine } from '$lib/ipc/commands';
-	import { startDownload } from '$lib/queue';
 	import { formatPercent, relativeDate } from '$lib/format';
 	import type { QueueItem } from '$lib/types';
 
@@ -28,6 +27,18 @@
 	function selectItem(item: QueueItem) {
 		if (item.resource) downloads.selected = item.resource;
 		if (item.path) player.load(item.path, label(item));
+	}
+
+	// Delete the downloaded file (and prune its folder), then drop the entry.
+	function deleteItem(item: QueueItem) {
+		if (item.path) engine.deleteFile(item.path);
+		if (player.path === item.path) player.unload();
+		downloads.remove(item.id);
+	}
+
+	function clearHistory() {
+		downloads.clearHistory();
+		player.clearCache();
 	}
 </script>
 
@@ -120,7 +131,7 @@
 					<h3 class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">History</h3>
 					{#if downloads.history.length}
 						<button
-							onclick={() => downloads.clearHistory()}
+							onclick={clearHistory}
 							title="Clear history"
 							aria-label="Clear history"
 							class="text-muted-foreground hover:text-destructive"
@@ -159,8 +170,8 @@
 									<FolderOpen class="size-3.5" />
 								</button>
 							{/if}
-							<button title="Download again" aria-label="Download again" onclick={() => startDownload(item.url, { quality: item.quality, resource: item.resource, force: true })} class="text-muted-foreground hover:text-foreground">
-								<RotateCw class="size-3.5" />
+							<button title="Delete download" aria-label="Delete download" onclick={() => deleteItem(item)} class="text-muted-foreground hover:text-destructive">
+								<Trash2 class="size-3.5" />
 							</button>
 						</div>
 					</div>

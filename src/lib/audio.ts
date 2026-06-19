@@ -7,7 +7,7 @@ export interface AudioAnalysis {
 	peaks: number[]; // 0..1 amplitude envelope
 }
 
-const FRAMES = 320;
+const FRAMES = 150;
 
 let ctx: AudioContext | null = null;
 function audioContext(): AudioContext {
@@ -49,5 +49,11 @@ function computePeaks(mono: Float32Array): number[] {
 		if (rms > max) max = rms;
 	}
 	// normalize with mild compression so quiet tracks still read well
-	return peaks.map((p) => Math.min(1, Math.pow(p / max, 0.8)));
+	const norm = peaks.map((p) => Math.min(1, Math.pow(p / max, 0.8)));
+	// smooth with a small moving average so the curve has no sharp spikes
+	return norm.map((_, i) => {
+		const a = norm[i - 1] ?? norm[i];
+		const c = norm[i + 1] ?? norm[i];
+		return (a + norm[i] * 2 + c) / 4;
+	});
 }

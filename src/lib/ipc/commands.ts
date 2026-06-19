@@ -30,7 +30,9 @@ export const engine = {
 	enqueue: (args: EnqueueArgs) => send({ cmd: 'enqueue', ...args }),
 	cancel: (jobId: string) => send({ cmd: 'cancel', job_id: jobId }),
 	resolveDuplicate: (jobId: string, action: 'cancel' | 'replace' | 'version') =>
-		send({ cmd: 'resolve_duplicate', job_id: jobId, action })
+		send({ cmd: 'resolve_duplicate', job_id: jobId, action }),
+	deleteFile: (path: string) => send({ cmd: 'delete_file', path }),
+	saveImage: (url: string, dest: string) => send({ cmd: 'save_image', url, dest })
 };
 
 export const settingsApi = {

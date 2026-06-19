@@ -54,7 +54,7 @@
 </script>
 
 <Dialog.Root bind:open>
-	<Dialog.Content class="glass-strong border-foreground/10 sm:max-w-lg">
+	<Dialog.Content class="glass-strong border-foreground/10 sm:max-w-xl">
 		<Dialog.Header>
 			<Dialog.Title>Settings</Dialog.Title>
 			<Dialog.Description>Preferences are saved automatically.</Dialog.Description>
@@ -115,11 +115,8 @@
 				</div>
 				<Switch
 					id="subfolders"
-					checked={settings.track_subfolders}
-					onCheckedChange={(v) => {
-						settings.track_subfolders = v;
-						settings.save();
-					}}
+					bind:checked={settings.track_subfolders}
+					onCheckedChange={() => settings.save()}
 				/>
 			</div>
 
@@ -159,11 +156,8 @@
 				<Label for="notify" class="text-sm">Notify when downloads finish</Label>
 				<Switch
 					id="notify"
-					checked={settings.notify_on_complete}
-					onCheckedChange={(v) => {
-						settings.notify_on_complete = v;
-						settings.save();
-					}}
+					bind:checked={settings.notify_on_complete}
+					onCheckedChange={() => settings.save()}
 				/>
 			</div>
 

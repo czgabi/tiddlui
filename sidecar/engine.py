@@ -10,7 +10,10 @@ from __future__ import annotations
 
 import asyncio
 import threading
+from pathlib import Path
 from typing import Any
+
+import requests
 
 import downloader
 import ffmpeg
@@ -84,6 +87,10 @@ class Engine:
                 fut = self.dup_futures.get(cmd.get("job_id", ""))
                 if fut and not fut.done():
                     fut.set_result(cmd.get("action", "cancel"))
+            elif name == "delete_file":
+                await asyncio.to_thread(self._delete_file, cmd.get("path", ""))
+            elif name == "save_image":
+                await asyncio.to_thread(self._save_image, cmd.get("url", ""), cmd.get("dest", ""))
             else:
                 log(f"unknown command: {name}", level="warning")
         except ApiError as exc:
@@ -103,6 +110,37 @@ class Engine:
     async def _tracklist(self, cmd: dict) -> None:
         tracks = await asyncio.to_thread(track_listing, self.session.api(), cmd["url"])
         emit("tracklist", request_id=cmd.get("request_id"), url=cmd["url"], tracks=tracks)
+
+    def _delete_file(self, path: str) -> None:
+        """Delete a downloaded file and prune now-empty parent folders (up to 3
+        levels, e.g. Artist/Album/), so a lone track removes its folder too."""
+        try:
+            p = Path(path)
+            p.unlink(missing_ok=True)
+            d = p.parent
+            for _ in range(3):
+                try:
+                    if d.exists() and not any(d.iterdir()):
+                        d.rmdir()
+                        d = d.parent
+                    else:
+                        break
+                except OSError:
+                    break
+            emit("deleted", path=path)
+        except Exception as exc:  # noqa: BLE001
+            emit("error", message=f"delete failed: {exc}")
+
+    def _save_image(self, url: str, dest: str) -> None:
+        try:
+            r = requests.get(url, timeout=30)
+            if r.status_code == 200:
+                Path(dest).write_bytes(r.content)
+                emit("saved", path=dest)
+            else:
+                emit("error", message=f"image download failed ({r.status_code})")
+        except Exception as exc:  # noqa: BLE001
+            emit("error", message=str(exc))
 
     async def _enqueue(self, cmd: dict) -> None:
         job_id = cmd["job_id"]

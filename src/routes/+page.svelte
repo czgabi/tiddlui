@@ -4,6 +4,7 @@
 	import { exit } from '@tauri-apps/plugin-process';
 	import { platform } from '@tauri-apps/plugin-os';
 	import { open as openDialog } from '@tauri-apps/plugin-dialog';
+	import { openUrl } from '@tauri-apps/plugin-opener';
 	import { Settings, Download, Square, FolderOpen, LogIn, Disc3 } from '@lucide/svelte';
 
 	import SearchBar from '$lib/components/SearchBar.svelte';
@@ -103,15 +104,23 @@
 	}
 </script>
 
-<svelte:window ondragover={(e) => e.preventDefault()} ondrop={onDrop} />
+<svelte:window
+	ondragover={(e) => e.preventDefault()}
+	ondrop={onDrop}
+	oncontextmenu={(e) => e.preventDefault()}
+/>
 
 <div class="flex h-full flex-col gap-4 p-4">
 	<!-- Header -->
 	<header class="flex items-center gap-3">
-		<div class="flex items-center gap-2 pr-1">
+		<button
+			onclick={() => openUrl('https://github.com/czgabi/tiddlui')}
+			title="Open the GitHub repo"
+			class="flex items-center gap-2 pr-1 transition-opacity hover:opacity-80"
+		>
 			<Disc3 class="size-6 text-accent-cyan" />
 			<span class="text-gradient text-lg font-semibold tracking-tight">Tiddlui</span>
-		</div>
+		</button>
 		<div class="flex-1"><SearchBar bind:this={searchBar} /></div>
 		{#if auth.loggedIn}
 			<div class="hidden text-xs text-muted-foreground sm:block">{auth.user ?? 'Signed in'}</div>

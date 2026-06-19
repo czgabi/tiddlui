@@ -5,15 +5,22 @@
 
 	let track = $state<HTMLDivElement | null>(null);
 	let dragging = $state(false);
+	let dragPct = $state<number | null>(null); // knob position while scrubbing (with resistance)
 
 	const index = $derived(Math.max(0, QUALITIES.indexOf(value)));
 	const pct = $derived((index / (QUALITIES.length - 1)) * 100);
+	const knobPct = $derived(dragPct ?? pct);
 
 	function setFromX(clientX: number) {
 		if (!track) return;
 		const r = track.getBoundingClientRect();
 		const frac = Math.max(0, Math.min(1, (clientX - r.left) / r.width));
-		value = QUALITIES[Math.round(frac * (QUALITIES.length - 1))];
+		const near = Math.round(frac * (QUALITIES.length - 1));
+		value = QUALITIES[near];
+		// knob is magnetized to the snap and only drifts 40% toward the cursor —
+		// gives a subtle "doesn't want to let go" resistance until it jumps.
+		const snapP = (near / (QUALITIES.length - 1)) * 100;
+		dragPct = snapP + (frac * 100 - snapP) * 0.4;
 	}
 	function onDown(e: PointerEvent) {
 		dragging = true;
@@ -25,6 +32,7 @@
 	}
 	function onUp(e: PointerEvent) {
 		dragging = false;
+		dragPct = null; // snap exactly to the selected mode
 		track?.releasePointerCapture(e.pointerId);
 	}
 	function onKey(e: KeyboardEvent) {
@@ -76,7 +84,8 @@
 		<div
 			class="qs-knob absolute top-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-md ring-1 ring-black/10"
 			class:scale-110={dragging}
-			style="left: {pct}%"
+			class:qs-dragging={dragging}
+			style="left: {knobPct}%"
 		></div>
 	</div>
 
@@ -92,6 +101,10 @@
 			left 0.32s cubic-bezier(0.22, 1, 0.36, 1),
 			width 0.32s cubic-bezier(0.22, 1, 0.36, 1),
 			transform 0.15s ease;
+	}
+	/* follow the cursor quickly while dragging; spring to the snap on release */
+	.qs-knob.qs-dragging {
+		transition: left 0.1s linear;
 	}
 	.qs-track:focus-visible {
 		outline: none;

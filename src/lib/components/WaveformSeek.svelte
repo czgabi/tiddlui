@@ -9,22 +9,32 @@
 	let wrap = $state<HTMLDivElement | null>(null);
 	let prog = $state(0);
 	let dragging = $state(false);
+	let dragFrac = $state<number | null>(null);
 
-	// Static geometry from the amplitude envelope.
-	const contour = $derived.by(() => {
+	// Smooth curve (quadratic through midpoints) → no sharp edges.
+	const paths = $derived.by(() => {
 		const a = player.analysis;
-		if (!a) return '';
+		if (!a || a.peaks.length < 2) return { line: '', fill: '' };
 		const n = a.peaks.length;
-		return a.peaks
-			.map((v, i) => `${i ? 'L' : 'M'} ${((i / (n - 1)) * W).toFixed(1)} ${(BASE - v * 92).toFixed(1)}`)
-			.join(' ');
+		const pts = a.peaks.map((v, i) => [(i / (n - 1)) * W, BASE - v * 90] as [number, number]);
+		let mid = '';
+		for (let i = 1; i < pts.length - 1; i++) {
+			const mx = (pts[i][0] + pts[i + 1][0]) / 2;
+			const my = (pts[i][1] + pts[i + 1][1]) / 2;
+			mid += ` Q ${pts[i][0].toFixed(1)} ${pts[i][1].toFixed(1)} ${mx.toFixed(1)} ${my.toFixed(1)}`;
+		}
+		const last = pts[pts.length - 1];
+		mid += ` L ${last[0].toFixed(1)} ${last[1].toFixed(1)}`;
+		const start = `${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+		return { line: `M ${start}${mid}`, fill: `M 0 ${BASE} L ${start}${mid} L ${W} ${BASE} Z` };
 	});
-	const silhouette = $derived(contour ? `M 0 ${BASE} ${contour.slice(1)} L ${W} ${BASE} Z` : '');
 
 	onMount(() => {
 		let raf = 0;
 		const tick = () => {
-			prog = player.analysis ? Math.max(0, Math.min(1, player.progress)) : 0;
+			if (!player.analysis) prog = 0;
+			else if (dragFrac !== null) prog = dragFrac; // follow cursor while scrubbing
+			else prog = Math.max(0, Math.min(1, player.progress));
 			raf = requestAnimationFrame(tick);
 		};
 		raf = requestAnimationFrame(tick);
@@ -38,14 +48,16 @@
 	function onDown(e: PointerEvent) {
 		if (!player.path) return;
 		dragging = true;
+		dragFrac = fracFromEvent(e); // preview only — keep playing until release
 		wrap?.setPointerCapture(e.pointerId);
-		player.scrub(fracFromEvent(e));
 	}
 	function onMove(e: PointerEvent) {
-		if (dragging) player.scrub(fracFromEvent(e));
+		if (dragging) dragFrac = fracFromEvent(e);
 	}
 	function onUp(e: PointerEvent) {
+		if (dragging && dragFrac !== null) player.scrub(dragFrac); // skip now
 		dragging = false;
+		dragFrac = null;
 		wrap?.releasePointerCapture(e.pointerId);
 	}
 </script>
@@ -73,40 +85,15 @@
 				</linearGradient>
 			</defs>
 
-			<!-- played fill under the line -->
-			<path d={silhouette} fill="url(#wf-fill)" clip-path="url(#wf-played)" />
-			<!-- the waveform line -->
-			<path
-				d={contour}
-				fill="none"
-				stroke="var(--muted-foreground)"
-				stroke-opacity="0.55"
-				stroke-width="1.2"
-				vector-effect="non-scaling-stroke"
-			/>
-			<!-- bright line over the played part -->
-			<path
-				d={contour}
-				fill="none"
-				stroke="var(--accent-cyan)"
-				stroke-width="1.6"
-				vector-effect="non-scaling-stroke"
-				clip-path="url(#wf-played)"
-			/>
-			<!-- playhead -->
-			<line
-				x1={prog * W}
-				y1="0"
-				x2={prog * W}
-				y2={H}
-				stroke="var(--accent-pink)"
-				stroke-width="1.6"
-				vector-effect="non-scaling-stroke"
-			/>
+			<path d={paths.fill} fill="url(#wf-fill)" clip-path="url(#wf-played)" />
+			<path d={paths.line} fill="none" stroke="var(--muted-foreground)" stroke-opacity="0.5"
+				stroke-width="1.2" stroke-linejoin="round" vector-effect="non-scaling-stroke" />
+			<path d={paths.line} fill="none" stroke="var(--accent-cyan)" stroke-width="1.7"
+				stroke-linejoin="round" vector-effect="non-scaling-stroke" clip-path="url(#wf-played)" />
+			<line x1={prog * W} y1="0" x2={prog * W} y2={H} stroke="var(--accent-pink)"
+				stroke-width="1.6" vector-effect="non-scaling-stroke" />
 		</svg>
 	{:else}
-		<div class="flex h-full items-center">
-			<div class="h-px w-full bg-foreground/15"></div>
-		</div>
+		<div class="flex h-full items-center"><div class="h-px w-full bg-foreground/15"></div></div>
 	{/if}
 </div>

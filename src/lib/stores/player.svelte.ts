@@ -19,16 +19,18 @@ class PlayerStore {
 
 	#audio: HTMLAudioElement | null = null;
 	#token = 0;
+	#cache = new Map<string, AudioAnalysis>(); // path → analysis (avoid re-decoding)
 
 	#ensure(): HTMLAudioElement {
 		if (this.#audio) return this.#audio;
 		const a = new Audio();
-		a.loop = true;
+		a.loop = false; // play once; don't loop at the end
 		a.muted = this.muted;
 		a.addEventListener('timeupdate', () => (this.currentTime = a.currentTime));
 		a.addEventListener('durationchange', () => (this.duration = a.duration || this.duration));
 		a.addEventListener('play', () => (this.playing = true));
 		a.addEventListener('pause', () => (this.playing = false));
+		a.addEventListener('ended', () => (this.playing = false));
 		this.#audio = a;
 		return a;
 	}
@@ -63,18 +65,33 @@ class PlayerStore {
 		a.muted = this.muted;
 		// No autoplay — the user presses play. Waveform shows once analyzed.
 
+		// Reuse a cached analysis (same session) instead of decoding again.
+		const cached = this.#cache.get(path);
+		if (cached) {
+			this.analysis = cached;
+			this.duration = cached.duration;
+			this.analyzing = false;
+			return;
+		}
+
+		this.analysis = null;
 		this.analyzing = true;
 		try {
 			const analysis = await analyzeFile(src);
 			if (token === this.#token) {
 				this.analysis = analysis;
 				if (!this.duration) this.duration = analysis.duration;
+				this.#cache.set(path, analysis);
 			}
 		} catch {
 			/* visualizer falls back to idle lines */
 		} finally {
 			if (token === this.#token) this.analyzing = false;
 		}
+	}
+
+	clearCache() {
+		this.#cache.clear();
 	}
 
 	toggle() {
