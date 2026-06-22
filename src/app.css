@@ -113,6 +113,21 @@ button:disabled {
   cursor: not-allowed;
 }
 
+/* Fluid, eased hover/active transitions everywhere — no instant on/off snaps.
+   `.group` catches the hover rows (search results, tracklists, queue items);
+   named groups like `group/switch` keep their own timing. */
+button,
+[role='button'],
+[role='slider'],
+a[href],
+label[for],
+summary,
+.group {
+  transition-property: color, background-color, border-color, opacity, box-shadow, transform;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 html,
 body {
   height: 100%;

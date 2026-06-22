@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { Disc3, Music2, ListMusic, User, Play, Pause, Volume2, VolumeX, Download, BadgeCheck, Loader2, Copy, X, Maximize2, ArrowLeft } from '@lucide/svelte';
+	import { fade, scale } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
 	import { save } from '@tauri-apps/plugin-dialog';
 	import WaveformSeek from '$lib/components/WaveformSeek.svelte';
 	import { Button } from '$lib/components/ui/button';
@@ -111,7 +113,7 @@
 						class="group relative aspect-square w-48 overflow-hidden rounded-xl shadow-2xl ring-1 ring-foreground/10"
 					>
 						{#if cover}
-							<img src={cover} alt="" class="size-full object-cover transition-transform group-hover:scale-105" />
+							<img src={cover} alt="" class="size-full object-cover transition-transform duration-300 ease-out group-hover:scale-105" />
 							<div class="absolute inset-0 grid place-items-center bg-black/0 opacity-0 transition group-hover:bg-black/30 group-hover:opacity-100">
 								<Maximize2 class="size-6 text-white" />
 							</div>
@@ -239,8 +241,8 @@
 
 <!-- cover lightbox -->
 {#if coverOpen && cover}
-	<div class="fixed inset-0 z-[100] grid place-items-center bg-black/85 p-10 backdrop-blur-sm" onclick={() => (coverOpen = false)} role="presentation">
-		<img src={hiRes(cover)} alt="" class="max-h-[85vh] max-w-[90vw] rounded-2xl object-contain shadow-2xl ring-1 ring-white/10" onclick={(e) => e.stopPropagation()} role="presentation" />
+	<div class="fixed inset-0 z-[100] grid place-items-center bg-black/85 p-10 backdrop-blur-sm" onclick={() => (coverOpen = false)} role="presentation" transition:fade={{ duration: 160 }}>
+		<img src={hiRes(cover)} alt="" class="max-h-[85vh] max-w-[90vw] rounded-2xl object-contain shadow-2xl ring-1 ring-white/10" onclick={(e) => e.stopPropagation()} role="presentation" transition:scale={{ start: 0.9, opacity: 0, duration: 220, easing: cubicOut }} />
 		<button onclick={() => (coverOpen = false)} aria-label="Close" class="absolute top-5 right-5 rounded-full bg-black/40 p-2 text-white hover:bg-black/60"><X class="size-5" /></button>
 		<button onclick={(e) => { e.stopPropagation(); downloadCover(); }} class="absolute bottom-6 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm text-white backdrop-blur hover:bg-white/25"><Download class="size-4" /> Download image</button>
 	</div>

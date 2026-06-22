@@ -60,7 +60,7 @@
 			<Dialog.Description>Preferences are saved automatically.</Dialog.Description>
 		</Dialog.Header>
 
-		<div class="flex max-h-[70vh] flex-col gap-5 overflow-x-hidden overflow-y-auto py-2 pr-1">
+		<div class="flex max-h-[70vh] flex-col gap-5 overflow-x-hidden overflow-y-auto px-2 py-2">
 			<!-- Output folder -->
 			<div class="flex flex-col gap-2">
 				<Label class="text-xs tracking-wide text-muted-foreground uppercase">Download folder</Label>
