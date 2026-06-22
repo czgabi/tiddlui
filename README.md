@@ -2,7 +2,8 @@
   <img src="assets/logo.svg" alt="Tiddlui" width="260" />
 </div>
 
-Desktop app to download from Tidal. Search or paste a link, pick a quality, download. Windows.
+Desktop app to download from Tidal. Search or paste a link, pick a quality and download!
+(Windows only for now)
 
 ## Install
 
@@ -13,10 +14,11 @@ Download `Tiddlui_x.y.z_x64-setup.exe` from [Releases](../../releases), run it, 
 
 - Search Tidal, or paste track / album / playlist / artist links
 - Quality: Low · Normal · High (FLAC) · Max (Hi-Res)
-- Waveform player you can scrub
+- Song player with waveform visualization
 - Queue + history, album "Download all", duplicate prevention
 - Output templates, optional per-track subfolders
-- 9 themes, keyboard shortcuts, drag & drop
+- Downloadable cover-arts and artist profile pictures
+- 9 themes, keyboard shortcuts, drag & drop etc.
 
 ## Build from source
 
