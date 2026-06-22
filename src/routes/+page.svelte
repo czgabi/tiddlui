@@ -149,14 +149,14 @@
 						<span class="max-w-[12rem] truncate">{settings.output_path || 'Choose folder'}</span>
 					</Button>
 				</div>
-				<div class="flex-1"><QualitySlider bind:value={settings.quality} /></div>
+				<div class="min-w-0 flex-1"><QualitySlider bind:value={settings.quality} /></div>
 				{#if downloads.active}
-					<Button variant="secondary" onclick={stop}>
-						<Square class="size-4" /> Stop
+					<Button variant="secondary" onclick={stop} class="shrink-0" title="Stop">
+						<Square class="size-4" /> <span class="hidden lg:inline">Stop</span>
 					</Button>
 				{/if}
-				<Button onclick={go} disabled={!auth.loggedIn || !downloads.url.trim()}>
-					<Download class="size-4" /> Download
+				<Button onclick={go} disabled={!auth.loggedIn || !downloads.url.trim()} class="shrink-0" title="Download">
+					<Download class="size-4" /> <span class="hidden lg:inline">Download</span>
 				</Button>
 			</div>
 		</section>
