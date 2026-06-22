@@ -54,7 +54,7 @@
 </script>
 
 <Dialog.Root bind:open>
-	<Dialog.Content class="glass-strong border-foreground/10 sm:max-w-xl">
+	<Dialog.Content class="glass-strong border-foreground/10 w-full sm:max-w-2xl">
 		<Dialog.Header>
 			<Dialog.Title>Settings</Dialog.Title>
 			<Dialog.Description>Preferences are saved automatically.</Dialog.Description>
@@ -66,7 +66,7 @@
 				<Label class="text-xs tracking-wide text-muted-foreground uppercase">Download folder</Label>
 				<p class="text-xs text-muted-foreground">Where your downloads are saved on disk.</p>
 				<div class="flex gap-2">
-					<Input value={settings.output_path} readonly class="flex-1 font-mono text-xs" />
+					<Input value={settings.output_path} readonly class="min-w-0 flex-1 font-mono text-xs" />
 					<Button variant="secondary" size="sm" onclick={browse}>
 						<FolderOpen class="size-4" /> Browse
 					</Button>

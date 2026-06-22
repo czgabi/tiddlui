@@ -42,6 +42,7 @@ function route(ev: EngineEvent) {
 			break;
 		case 'search_results':
 			if (ev.request_id === search.requestId) {
+				// Already ranked by the engine (relevance + popularity).
 				search.results = {
 					tracks: ev.tracks ?? [],
 					albums: ev.albums ?? [],
@@ -54,7 +55,7 @@ function route(ev: EngineEvent) {
 			}
 			break;
 		case 'resolved':
-			downloads.selected = ev.resource;
+			downloads.select(ev.resource);
 			break;
 		case 'tracklist':
 			if (ev.url === downloads.tracklistUrl) downloads.tracklist = ev.tracks ?? [];
@@ -81,7 +82,7 @@ function route(ev: EngineEvent) {
 
 function clearAppState() {
 	downloads.items = [];
-	downloads.selected = null;
+	downloads.select(null);
 	downloads.url = '';
 	downloads.tracklist = [];
 	downloads.tracklistUrl = null;

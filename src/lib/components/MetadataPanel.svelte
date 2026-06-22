@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Disc3, Music2, ListMusic, User, Play, Pause, Volume2, VolumeX, Download, BadgeCheck, Loader2, Copy, X, Maximize2 } from '@lucide/svelte';
+	import { Disc3, Music2, ListMusic, User, Play, Pause, Volume2, VolumeX, Download, BadgeCheck, Loader2, Copy, X, Maximize2, ArrowLeft } from '@lucide/svelte';
 	import { save } from '@tauri-apps/plugin-dialog';
 	import WaveformSeek from '$lib/components/WaveformSeek.svelte';
 	import { Button } from '$lib/components/ui/button';
@@ -15,7 +15,15 @@
 	const resource = $derived<Resource | null>(downloads.selected);
 	const cover = $derived(resource?.cover_url ?? null);
 	const isCollection = $derived(resource?.kind === 'album' || resource?.kind === 'playlist');
+	const isArtist = $derived(resource?.kind === 'artist');
 	const iconFor = { track: Music2, album: Disc3, playlist: ListMusic, artist: User };
+
+	function back() {
+		const p = downloads.parent;
+		if (!p) return;
+		downloads.url = tidalUrl(p.kind, p.id);
+		downloads.select(p); // restores the collection/artist, clears the trail
+	}
 
 	let coverOpen = $state(false);
 	let tlReq = 0;
@@ -75,8 +83,8 @@
 	});
 
 	function pickTrack(t: Resource) {
-		downloads.selected = t;
 		downloads.url = tidalUrl('track', t.id);
+		downloads.drillInto(t, resource); // remember the collection/artist for "back"
 	}
 </script>
 
@@ -121,6 +129,14 @@
 
 				<!-- info -->
 				<div class="flex min-w-0 flex-1 flex-col">
+					{#if downloads.parent}
+						<button
+							onclick={back}
+							class="mb-2 -ml-1 inline-flex w-fit items-center gap-1.5 rounded-md px-1.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
+						>
+							<ArrowLeft class="size-3.5" /> Back to {downloads.parent.title}
+						</button>
+					{/if}
 					<div class="group/head flex items-start gap-2" oncontextmenu={(e) => { e.preventDefault(); copyTrack(); }} role="presentation">
 						<div class="min-w-0">
 							<h2 class="truncate text-2xl font-semibold text-foreground" title={resource?.title}>{resource?.title ?? player.title}</h2>
@@ -154,7 +170,35 @@
 								</div>
 							{/each}
 						</div>
-					{:else if trackMeta.length}
+					{:else if isArtist}
+							<div class="mt-3 flex min-h-0 flex-1 flex-col gap-3">
+								{#if resource?.popularity != null}
+									<span class="inline-flex w-fit items-center gap-1.5 rounded-full border border-foreground/10 bg-foreground/5 px-3 py-1 text-xs text-muted-foreground">
+										Popularity {resource.popularity}/100
+									</span>
+								{/if}
+								{#if resource?.bio}
+									<p class="max-h-32 shrink-0 overflow-y-auto pr-1 text-xs leading-relaxed whitespace-pre-line text-muted-foreground">{resource.bio}</p>
+								{/if}
+								{#if resource?.top_tracks?.length}
+									<div class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">Top tracks</div>
+									<div class="min-h-0 flex-1 overflow-y-auto pr-1">
+										{#each resource.top_tracks as t, i (t.id)}
+											<div class="group relative flex items-center gap-3 rounded-md pr-8 hover:bg-foreground/10">
+												<button onclick={() => pickTrack(t)} class="flex min-w-0 flex-1 items-center gap-3 px-2 py-1.5 text-left">
+													<span class="w-5 shrink-0 text-right text-xs text-muted-foreground">{i + 1}</span>
+													<div class="min-w-0 flex-1"><div class="truncate text-sm text-foreground">{t.title}</div><div class="truncate text-xs text-muted-foreground">{t.artist}</div></div>
+													<span class="shrink-0 text-xs text-muted-foreground">{formatDuration(t.duration)}</span>
+												</button>
+												<button title="Download this track" onclick={() => startDownload(tidalUrl('track', t.id), { resource: t })} class="absolute right-2 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-accent-cyan"><Download class="size-4" /></button>
+											</div>
+										{/each}
+									</div>
+								{:else}
+									<p class="text-xs text-muted-foreground">No top tracks available.</p>
+								{/if}
+							</div>
+						{:else if trackMeta.length}
 						<div class="mt-4 grid grid-cols-2 gap-2 overflow-y-auto pr-1">
 							{#each trackMeta as [k, v, wide] (k)}
 								<div class="group relative rounded-lg border border-foreground/5 bg-foreground/5 px-3 py-2 {wide ? 'col-span-2' : ''}" oncontextmenu={(e) => { e.preventDefault(); copyText(v); }} role="presentation">
@@ -195,8 +239,8 @@
 
 <!-- cover lightbox -->
 {#if coverOpen && cover}
-	<div class="fixed inset-0 z-[100] grid place-items-center bg-black/85 p-8 backdrop-blur-sm" onclick={() => (coverOpen = false)} oncontextmenu={(e) => { e.preventDefault(); downloadCover(); }} role="presentation">
-		<img src={hiRes(cover)} alt="" class="max-h-full max-w-full rounded-2xl shadow-2xl ring-1 ring-white/10" onclick={(e) => e.stopPropagation()} oncontextmenu={(e) => { e.preventDefault(); downloadCover(); }} role="presentation" />
+	<div class="fixed inset-0 z-[100] grid place-items-center bg-black/85 p-10 backdrop-blur-sm" onclick={() => (coverOpen = false)} role="presentation">
+		<img src={hiRes(cover)} alt="" class="max-h-[85vh] max-w-[90vw] rounded-2xl object-contain shadow-2xl ring-1 ring-white/10" onclick={(e) => e.stopPropagation()} role="presentation" />
 		<button onclick={() => (coverOpen = false)} aria-label="Close" class="absolute top-5 right-5 rounded-full bg-black/40 p-2 text-white hover:bg-black/60"><X class="size-5" /></button>
 		<button onclick={(e) => { e.stopPropagation(); downloadCover(); }} class="absolute bottom-6 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm text-white backdrop-blur hover:bg-white/25"><Download class="size-4" /> Download image</button>
 	</div>

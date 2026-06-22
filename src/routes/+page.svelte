@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { fly, fade } from 'svelte/transition';
 	import { getCurrentWebview } from '@tauri-apps/api/webview';
 	import { exit } from '@tauri-apps/plugin-process';
 	import { platform } from '@tauri-apps/plugin-os';
@@ -171,17 +172,21 @@
 	</div>
 {/if}
 
-<!-- toast -->
-{#if ui.toast}
-	<div
-		class="fixed right-4 bottom-4 z-50 max-w-sm rounded-xl border px-4 py-2.5 text-sm backdrop-blur-md {ui
-			.toast.kind === 'error'
-			? 'border-destructive/40 bg-destructive/15 text-destructive-foreground'
-			: 'border-foreground/10 bg-foreground/10 text-foreground'}"
-	>
-		{ui.toast.message}
-	</div>
-{/if}
+<!-- toast (re-mounts on each notify so the pop-in animation replays) -->
+{#key ui.toastSeq}
+	{#if ui.toast}
+		<div
+			in:fly={{ y: 12, duration: 160 }}
+			out:fade={{ duration: 120 }}
+			class="fixed right-4 bottom-4 z-50 max-w-sm rounded-xl border px-4 py-2.5 text-sm backdrop-blur-md {ui
+				.toast.kind === 'error'
+				? 'border-destructive/40 bg-destructive/15 text-destructive-foreground'
+				: 'border-foreground/10 bg-foreground/10 text-foreground'}"
+		>
+			{ui.toast.message}
+		</div>
+	{/if}
+{/key}
 
 <SettingsModal bind:open={settingsOpen} />
 <AuthDialog bind:open={authOpen} />

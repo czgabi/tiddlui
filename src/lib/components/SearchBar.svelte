@@ -28,7 +28,7 @@
 		if (!q) {
 			search.clear();
 			downloads.url = '';
-			downloads.selected = null;
+			downloads.select(null);
 			return;
 		}
 
@@ -47,18 +47,20 @@
 	}
 
 	function pick(r: Resource) {
-		downloads.selected = r;
+		downloads.select(r);
 		downloads.url = tidalUrl(r.kind, r.id);
 		search.query = `${r.artist ? r.artist + ' — ' : ''}${r.title}`;
 		search.open = false;
 		urlMode = true;
+		// Artists need a follow-up fetch for bio + top tracks (search omits them).
+		if (r.kind === 'artist') engine.resolve(downloads.url, ++search.requestId);
 	}
 
 	function clear() {
 		search.query = '';
 		search.clear();
 		downloads.url = '';
-		downloads.selected = null;
+		downloads.select(null);
 		downloads.tracklist = [];
 		downloads.tracklistUrl = null;
 		player.unload(); // stop playback + clear the loaded track

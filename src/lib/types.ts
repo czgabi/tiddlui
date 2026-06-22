@@ -40,6 +40,9 @@ export interface Resource {
 	isrc?: string | null;
 	bpm?: number | null;
 	popularity?: number | null;
+	// artist detail (populated when an artist is resolved)
+	bio?: string | null;
+	top_tracks?: Resource[];
 }
 
 export interface SearchResults {

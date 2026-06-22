@@ -20,4 +20,5 @@ vite.config.ts.timestamp-*
 /sidecar/build_pyi
 /sidecar/*.spec
 /sidecar/__pycache__
+/sidecar/build.log
 **/__pycache__/

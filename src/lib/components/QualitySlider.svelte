@@ -66,10 +66,11 @@
 	>
 		<!-- rail -->
 		<div class="absolute top-1/2 right-0 left-0 h-[3px] -translate-y-1/2 rounded-full bg-foreground/12"></div>
-		<!-- fill -->
+		<!-- fill (tracks the knob exactly so the bar never drifts ahead of the dot) -->
 		<div
 			class="qs-fill absolute top-1/2 left-0 h-[3px] -translate-y-1/2 rounded-full bg-gradient-to-r from-accent-cyan to-accent-purple"
-			style="width: {pct}%"
+			class:qs-dragging={dragging}
+			style="width: {knobPct}%"
 		></div>
 		<!-- snap ticks -->
 		{#each QUALITIES as q, i (q)}
@@ -94,17 +95,21 @@
 </div>
 
 <style>
-	/* Snappy, low-overshoot easing (Apple-like), applied to fill + knob. */
+	/* Snappy, low-overshoot easing (Apple-like); fill + knob share it so they
+	   always move together. */
 	.qs-fill,
 	.qs-knob {
 		transition:
-			left 0.32s cubic-bezier(0.22, 1, 0.36, 1),
-			width 0.32s cubic-bezier(0.22, 1, 0.36, 1),
-			transform 0.15s ease;
+			left 0.16s cubic-bezier(0.3, 0, 0.2, 1),
+			width 0.16s cubic-bezier(0.3, 0, 0.2, 1),
+			transform 0.12s ease;
 	}
-	/* follow the cursor quickly while dragging; spring to the snap on release */
-	.qs-knob.qs-dragging {
-		transition: left 0.1s linear;
+	/* both follow the cursor in lock-step while dragging, then snap on release */
+	.qs-knob.qs-dragging,
+	.qs-fill.qs-dragging {
+		transition:
+			left 0.05s linear,
+			width 0.05s linear;
 	}
 	.qs-track:focus-visible {
 		outline: none;

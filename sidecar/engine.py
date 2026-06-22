@@ -101,7 +101,7 @@ class Engine:
 
     async def _search(self, cmd: dict) -> None:
         results = await asyncio.to_thread(do_search, self.session.api(), cmd["query"])
-        emit("search_results", request_id=cmd.get("request_id"), **results)
+        emit("search_results", request_id=cmd.get("request_id"), query=cmd["query"], **results)
 
     async def _resolve(self, cmd: dict) -> None:
         summary = await asyncio.to_thread(resolve_summary, self.session.api(), cmd["url"])

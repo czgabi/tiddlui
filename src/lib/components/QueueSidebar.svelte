@@ -25,7 +25,7 @@
 
 	// Clicking a history row selects it: shows its metadata + loads the player.
 	function selectItem(item: QueueItem) {
-		if (item.resource) downloads.selected = item.resource;
+		if (item.resource) downloads.select(item.resource);
 		if (item.path) player.load(item.path, label(item));
 	}
 
