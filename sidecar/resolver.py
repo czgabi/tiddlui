@@ -130,6 +130,25 @@ def do_search(api: Any, query: str) -> dict:
     return merged
 
 
+def get_stream_url(api: Any, track_id: Any, quality: str = "HIGH") -> dict:
+    """Resolve a directly-playable stream URL for in-app preview (no download).
+
+    LOW/HIGH come back as a single unencrypted AAC (audio/mp4) URL the WebView
+    can play as-is — ideal for previewing before deciding to download.
+    """
+    import base64
+    import json
+
+    try:
+        stream = api.get_track_stream(track_id, quality)
+        manifest = json.loads(base64.b64decode(stream.manifest))
+        urls = manifest.get("urls") or []
+        return {"track_id": track_id, "url": urls[0] if urls else None,
+                "mime": manifest.get("mimeType")}
+    except Exception as exc:  # noqa: BLE001
+        return {"track_id": track_id, "url": None, "error": str(exc)}
+
+
 def resolve_summary(api: Any, text: str) -> dict:
     """Lightweight metadata for the AlbumCard when a URL/result is selected."""
     rtype, rid = parse_resource(text)

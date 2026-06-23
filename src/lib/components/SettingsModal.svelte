@@ -120,6 +120,17 @@
 				/>
 			</div>
 
+			<!-- MP3 export -->
+			<div class="flex items-center justify-between gap-4">
+				<div>
+					<Label for="mp3" class="text-sm">Convert to MP3</Label>
+					<p class="text-xs text-muted-foreground">
+						Smaller 320&nbsp;kbps files for size-limited devices, at the cost of quality.
+					</p>
+				</div>
+				<Switch id="mp3" bind:checked={settings.export_mp3} onCheckedChange={() => settings.save()} />
+			</div>
+
 			<!-- Theme -->
 			<div class="flex flex-col gap-2">
 				<Label class="text-xs tracking-wide text-muted-foreground uppercase">Theme</Label>

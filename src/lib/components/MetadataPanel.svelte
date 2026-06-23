@@ -10,6 +10,7 @@
 	import { ui } from '$lib/stores/ui.svelte';
 	import { engine } from '$lib/ipc/commands';
 	import { startDownload } from '$lib/queue';
+	import { previewTrack } from '$lib/preview';
 	import { formatDuration } from '$lib/format';
 	import { tidalUrl } from '$lib/url';
 	import type { Resource } from '$lib/types';
@@ -132,6 +133,19 @@
 							<BadgeCheck class="size-3.5" />{resource.audio_quality}
 						</span>
 					{/if}
+					{#if resource?.kind === 'track'}
+						<Button
+							size="sm"
+							variant="secondary"
+							class="w-full"
+							title="Listen before downloading"
+							onclick={() => resource && previewTrack(resource)}
+							disabled={player.streamLoading}
+						>
+							{#if player.streamLoading}<Loader2 class="size-4 animate-spin" />{:else}<Play class="size-4" />{/if}
+							Preview
+						</Button>
+					{/if}
 				</div>
 
 				<!-- info -->
@@ -170,13 +184,16 @@
 							<div class="mt-2 min-h-0 flex-1 overflow-y-auto pr-1">
 							{#if downloads.tracklist.length === 0}<p class="text-xs text-muted-foreground">Loading tracks…</p>{/if}
 							{#each downloads.tracklist as t, i (t.id)}
-								<div class="group relative flex items-center gap-3 rounded-md pr-8 hover:bg-foreground/10">
+								<div class="group relative flex items-center gap-3 rounded-md pr-14 hover:bg-foreground/10">
 									<button onclick={() => pickTrack(t)} class="flex min-w-0 flex-1 items-center gap-3 px-2 py-1.5 text-left">
 										<span class="w-5 shrink-0 text-right text-xs text-muted-foreground">{i + 1}</span>
 										<div class="min-w-0 flex-1"><div class="truncate text-sm text-foreground">{t.title}</div><div class="truncate text-xs text-muted-foreground">{t.artist}</div></div>
 										<span class="shrink-0 text-xs text-muted-foreground">{formatDuration(t.duration)}</span>
 									</button>
-									<button title="Download this track" onclick={() => startDownload(tidalUrl('track', t.id), { resource: t })} class="absolute right-2 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-accent-cyan"><Download class="size-4" /></button>
+									<div class="absolute right-1.5 flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+											<button title="Preview" aria-label="Preview" onclick={() => previewTrack(t)} class="rounded p-1 text-muted-foreground hover:text-accent-cyan"><Play class="size-4" /></button>
+											<button title="Download this track" aria-label="Download" onclick={() => startDownload(tidalUrl('track', t.id), { resource: t })} class="rounded p-1 text-muted-foreground hover:text-accent-cyan"><Download class="size-4" /></button>
+										</div>
 								</div>
 							{/each}
 						</div>
@@ -194,13 +211,16 @@
 									<div class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">Top tracks</div>
 									<div class="shrink-0">
 										{#each resource.top_tracks as t, i (t.id)}
-											<div class="group relative flex items-center gap-3 rounded-md pr-8 hover:bg-foreground/10">
+											<div class="group relative flex items-center gap-3 rounded-md pr-14 hover:bg-foreground/10">
 												<button onclick={() => pickTrack(t)} class="flex min-w-0 flex-1 items-center gap-3 px-2 py-1.5 text-left">
 													<span class="w-5 shrink-0 text-right text-xs text-muted-foreground">{i + 1}</span>
 													<div class="min-w-0 flex-1"><div class="truncate text-sm text-foreground">{t.title}</div><div class="truncate text-xs text-muted-foreground">{t.artist}</div></div>
 													<span class="shrink-0 text-xs text-muted-foreground">{formatDuration(t.duration)}</span>
 												</button>
-												<button title="Download this track" onclick={() => startDownload(tidalUrl('track', t.id), { resource: t })} class="absolute right-2 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-accent-cyan"><Download class="size-4" /></button>
+												<div class="absolute right-1.5 flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+											<button title="Preview" aria-label="Preview" onclick={() => previewTrack(t)} class="rounded p-1 text-muted-foreground hover:text-accent-cyan"><Play class="size-4" /></button>
+											<button title="Download this track" aria-label="Download" onclick={() => startDownload(tidalUrl('track', t.id), { resource: t })} class="rounded p-1 text-muted-foreground hover:text-accent-cyan"><Download class="size-4" /></button>
+										</div>
 											</div>
 										{/each}
 									</div>
@@ -238,7 +258,7 @@
 				</div>
 			</div>
 
-			{#if player.path}
+			{#if player.path || player.streamLoading}
 				<div class="mt-3 flex flex-col gap-1.5 border-t border-foreground/10 pt-3">
 					<div class="flex items-center gap-3">
 						<button onclick={() => player.toggle()} title={player.playing ? 'Pause' : 'Play'} aria-label={player.playing ? 'Pause' : 'Play'} class="text-foreground hover:text-accent-cyan">
@@ -248,9 +268,14 @@
 							{#if player.muted}<VolumeX class="size-4" />{:else}<Volume2 class="size-4" />{/if}
 						</button>
 						<span class="min-w-0 flex-1 truncate text-xs text-muted-foreground">{player.title}</span>
+						{#if player.streaming}
+							<span class="shrink-0 rounded-full bg-accent-cyan/15 px-2 py-0.5 text-[10px] font-medium tracking-wide text-accent-cyan uppercase">Preview</span>
+						{/if}
 						<span class="text-xs text-muted-foreground tabular-nums">{formatDuration(player.currentTime)} / {formatDuration(player.duration)}</span>
 					</div>
-					{#if player.analyzing}
+					{#if player.streamLoading}
+						<div class="flex h-11 items-center justify-center gap-2 text-xs text-muted-foreground"><Loader2 class="size-4 animate-spin text-accent-cyan" /> Loading preview…</div>
+					{:else if player.analyzing}
 						<div class="flex h-11 items-center justify-center gap-2 text-xs text-muted-foreground"><Loader2 class="size-4 animate-spin text-accent-cyan" /> Analyzing waveform…</div>
 					{:else}
 						<WaveformSeek />

@@ -38,7 +38,8 @@ export function startDownload(
 		quality,
 		output_path: settings.output_path,
 		template: settings.template,
-		subfolders: settings.track_subfolders
+		subfolders: settings.track_subfolders,
+		mp3: settings.export_mp3
 	});
 	return id;
 }

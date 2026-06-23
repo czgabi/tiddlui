@@ -92,6 +92,7 @@ export interface AppSettings {
 	notify_on_complete: boolean;
 	theme: string;
 	track_subfolders: boolean;
+	export_mp3: boolean;
 }
 
 export interface FfmpegStatus {

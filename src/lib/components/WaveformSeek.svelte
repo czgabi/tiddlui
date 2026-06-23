@@ -32,7 +32,7 @@
 	onMount(() => {
 		let raf = 0;
 		const tick = () => {
-			if (!player.analysis) prog = 0;
+			if (!player.path) prog = 0;
 			else if (dragFrac !== null) prog = dragFrac; // follow cursor while scrubbing
 			else prog = Math.max(0, Math.min(1, player.progress));
 			raf = requestAnimationFrame(tick);
@@ -94,6 +94,18 @@
 				stroke-width="1.6" vector-effect="non-scaling-stroke" />
 		</svg>
 	{:else}
-		<div class="flex h-full items-center"><div class="h-px w-full bg-foreground/15"></div></div>
+		<!-- streamed preview (no local file to analyze): plain seek bar -->
+		<div class="flex h-full items-center">
+			<div class="relative h-1.5 w-full rounded-full bg-foreground/15">
+				<div
+					class="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-accent-cyan to-accent-purple"
+					style="width: {prog * 100}%"
+				></div>
+				<div
+					class="absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow ring-1 ring-black/10"
+					style="left: {prog * 100}%"
+				></div>
+			</div>
+		</div>
 	{/if}
 </div>

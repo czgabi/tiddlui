@@ -126,15 +126,12 @@
 		</button>
 		<div class="flex-1"><SearchBar bind:this={searchBar} /></div>
 		{#if auth.loggedIn}
-			<div class="hidden text-xs text-muted-foreground sm:block">{auth.user ?? 'Signed in'}</div>
+			<Button variant="secondary" size="sm" onclick={() => library.openModal()}>
+				<Library class="size-4" /> Library
+			</Button>
 		{:else}
 			<Button variant="secondary" size="sm" onclick={() => (authOpen = true)}>
 				<LogIn class="size-4" /> Sign in
-			</Button>
-		{/if}
-		{#if auth.loggedIn}
-			<Button variant="ghost" size="icon" title="Your Library" onclick={() => library.openModal()}>
-				<Library class="size-5" />
 			</Button>
 		{/if}
 		<Button variant="ghost" size="icon" title="Settings ({ui.mod}+,)" onclick={() => (settingsOpen = true)}>

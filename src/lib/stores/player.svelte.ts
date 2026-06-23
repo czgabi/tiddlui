@@ -16,6 +16,9 @@ class PlayerStore {
 	duration = $state(0);
 	analysis = $state<AudioAnalysis | null>(null);
 	analyzing = $state(false);
+	// streaming = playing a remote Tidal preview (not a downloaded file)
+	streaming = $state(false);
+	streamLoading = $state(false);
 
 	#audio: HTMLAudioElement | null = null;
 	#token = 0;
@@ -48,12 +51,45 @@ class PlayerStore {
 		return this.duration ? this.liveTime() / this.duration : 0;
 	}
 
+	/** Mark that a preview is being fetched (URL not ready yet). */
+	beginStream(title = '') {
+		const a = this.#ensure();
+		this.#token++;
+		a.pause();
+		this.playing = false;
+		this.streaming = true;
+		this.streamLoading = true;
+		this.title = title;
+		this.analysis = null;
+		this.currentTime = 0;
+		this.duration = 0;
+	}
+
+	/** Play a remote Tidal stream URL (preview) — no waveform analysis, autoplays. */
+	stream(url: string, title = '') {
+		const a = this.#ensure();
+		this.#token++; // invalidate any in-flight local-file analysis
+		this.streaming = true;
+		this.streamLoading = false;
+		this.analyzing = false;
+		this.analysis = null;
+		this.path = url; // marks "something is loaded" for the UI
+		this.title = title || this.title;
+		this.currentTime = 0;
+		this.duration = 0;
+		a.src = url; // remote URL, played directly (no convertFileSrc)
+		a.muted = this.muted;
+		a.play().catch(() => {});
+	}
+
 	async load(path: string, title = '') {
 		if (!PlayerStore.isAudio(path)) return;
 		const a = this.#ensure();
 		const token = ++this.#token;
 		a.pause(); // reset transport so the play/pause icon isn't stuck
 		this.playing = false;
+		this.streaming = false;
+		this.streamLoading = false;
 		this.path = path;
 		this.title = title;
 		this.analysis = null;
@@ -127,6 +163,8 @@ class PlayerStore {
 		this.title = '';
 		this.analysis = null;
 		this.playing = false;
+		this.streaming = false;
+		this.streamLoading = false;
 		this.currentTime = 0;
 		this.duration = 0;
 	}

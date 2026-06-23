@@ -18,7 +18,7 @@ import requests
 import downloader
 import ffmpeg
 from protocol import emit, log, read_commands
-from resolver import do_search, expand_jobs, favorites, parse_resource, resolve_summary, track_listing
+from resolver import do_search, expand_jobs, favorites, get_stream_url, parse_resource, resolve_summary, track_listing
 from serialize import cover_url
 from session import ApiError, Session
 
@@ -77,6 +77,8 @@ class Engine:
                 await self._search(cmd)
             elif name == "favorites":
                 await self._favorites(cmd)
+            elif name == "stream":
+                await self._stream(cmd)
             elif name == "resolve":
                 await self._resolve(cmd)
             elif name == "tracklist":
@@ -110,6 +112,12 @@ class Engine:
             favorites, self.session.api(), cmd.get("kind", "tracks"), cmd.get("offset", 0)
         )
         emit("favorites", request_id=cmd.get("request_id"), **result)
+
+    async def _stream(self, cmd: dict) -> None:
+        info = await asyncio.to_thread(
+            get_stream_url, self.session.api(), cmd["track_id"], cmd.get("quality", "HIGH")
+        )
+        emit("stream_url", request_id=cmd.get("request_id"), **info)
 
     async def _resolve(self, cmd: dict) -> None:
         summary = await asyncio.to_thread(resolve_summary, self.session.api(), cmd["url"])
@@ -236,6 +244,7 @@ class Engine:
             await downloader.download_job(
                 api, tj, cmd["quality"], cmd["output_path"], template,
                 job_id, relay, lambda: job_id in self.cancelled, on_duplicate,
+                mp3=cmd.get("mp3", False),
             )
 
         # Keep the original resource summary; just attach the final file path so

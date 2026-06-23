@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import shutil
+import subprocess
 import time
 from pathlib import Path
 from tempfile import NamedTemporaryFile
@@ -25,7 +26,7 @@ from serialize import QUALITY_MAP, cover_url
 
 CHUNK = 1024 * 256
 LOSSLESS = {"LOSSLESS", "HI_RES_LOSSLESS"}
-EXTS = (".flac", ".m4a")
+EXTS = (".flac", ".m4a", ".mp3")
 DuplicateResolver = Callable[[str], Awaitable[str]]  # name -> cancel|replace|version
 
 
@@ -72,6 +73,7 @@ async def download_job(
     emit: Callable[..., None],
     is_cancelled: Callable[[], bool],
     on_duplicate: Optional[DuplicateResolver] = None,
+    mp3: bool = False,
 ) -> None:
     track = job.track
     track_quality = QUALITY_MAP.get(gui_quality, "LOSSLESS")
@@ -174,6 +176,9 @@ async def download_job(
         await asyncio.to_thread(
             add_track_metadata, final, track, date, album_artist, "", cover_data
         )
+        # Optional: re-encode to a smaller MP3 for size-constrained use.
+        if mp3 and final.suffix.lower() != ".mp3":
+            final = await asyncio.to_thread(_to_mp3, final)
     except Exception as exc:  # noqa: BLE001 — report + clean partial files
         _cleanup(base, tmp.name)
         emit("job_update", job_id=job_id, status="error", message=str(exc))
@@ -181,6 +186,22 @@ async def download_job(
 
     emit("job_update", job_id=job_id, status="complete", progress=1.0,
          quality_label=label, path=str(final))
+
+
+def _to_mp3(src: Path) -> Path:
+    """Transcode the finished file to 320 kbps MP3 (carrying tags + cover art),
+    then remove the original. ffmpeg is already on PATH (provisioned at startup)."""
+    dest = src.with_suffix(".mp3")
+    cmd = [
+        "ffmpeg", "-y", "-i", str(src),
+        "-map", "0", "-c:a", "libmp3lame", "-b:a", "320k",
+        "-c:v", "copy", "-id3v2_version", "3",
+        str(dest),
+    ]
+    subprocess.run(cmd, check=True, capture_output=True,
+                   creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+    src.unlink(missing_ok=True)
+    return dest
 
 
 def _fetch_cover(uid: Any) -> bytes | None:

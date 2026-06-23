@@ -14,6 +14,7 @@ export interface EnqueueArgs {
 	output_path: string;
 	template: string;
 	subfolders: boolean;
+	mp3: boolean;
 }
 
 export const engine = {
@@ -25,6 +26,8 @@ export const engine = {
 		send({ cmd: 'search', query, request_id: requestId }),
 	favorites: (kind: string, offset: number, requestId: number) =>
 		send({ cmd: 'favorites', kind, offset, request_id: requestId }),
+	stream: (trackId: string, requestId: number) =>
+		send({ cmd: 'stream', track_id: trackId, request_id: requestId }),
 	resolve: (url: string, requestId: number) =>
 		send({ cmd: 'resolve', url, request_id: requestId }),
 	tracklist: (url: string, requestId: number) =>
