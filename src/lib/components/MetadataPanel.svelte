@@ -21,10 +21,10 @@
 	const iconFor = { track: Music2, album: Disc3, playlist: ListMusic, artist: User };
 
 	function back() {
-		const p = downloads.parent;
+		const p = downloads.backTarget;
 		if (!p) return;
 		downloads.url = tidalUrl(p.kind, p.id);
-		downloads.select(p); // restores the collection/artist, clears the trail
+		downloads.back();
 	}
 
 	let coverOpen = $state(false);
@@ -86,7 +86,12 @@
 
 	function pickTrack(t: Resource) {
 		downloads.url = tidalUrl('track', t.id);
-		downloads.drillInto(t, resource); // remember the collection/artist for "back"
+		downloads.drillInto(t); // remember the collection/artist for "back"
+	}
+
+	function pickAlbum(a: Resource) {
+		downloads.url = tidalUrl('album', a.id);
+		downloads.drillInto(a); // drill from an artist into one of their albums
 	}
 </script>
 
@@ -131,12 +136,12 @@
 
 				<!-- info -->
 				<div class="flex min-w-0 flex-1 flex-col">
-					{#if downloads.parent}
+					{#if downloads.backTarget}
 						<button
 							onclick={back}
 							class="mb-2 -ml-1 inline-flex w-fit items-center gap-1.5 rounded-md px-1.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
 						>
-							<ArrowLeft class="size-3.5" /> Back to {downloads.parent.title}
+							<ArrowLeft class="size-3.5" /> Back to {downloads.backTarget.title}
 						</button>
 					{/if}
 					<div class="group/head flex items-start gap-2" oncontextmenu={(e) => { e.preventDefault(); copyTrack(); }} role="presentation">
@@ -159,7 +164,10 @@
 								<Button size="sm" onclick={() => startDownload(tidalUrl(resource.kind, resource.id), { resource })}><Download class="size-4" /> Download all</Button>
 							{/if}
 						</div>
-						<div class="mt-2 min-h-0 flex-1 overflow-y-auto pr-1">
+						{#if resource?.kind === 'album' && resource.review}
+								<p class="mb-1 max-h-24 shrink-0 overflow-y-auto pr-1 text-xs leading-relaxed whitespace-pre-line text-muted-foreground">{resource.review}</p>
+							{/if}
+							<div class="mt-2 min-h-0 flex-1 overflow-y-auto pr-1">
 							{#if downloads.tracklist.length === 0}<p class="text-xs text-muted-foreground">Loading tracks…</p>{/if}
 							{#each downloads.tracklist as t, i (t.id)}
 								<div class="group relative flex items-center gap-3 rounded-md pr-8 hover:bg-foreground/10">
@@ -173,18 +181,18 @@
 							{/each}
 						</div>
 					{:else if isArtist}
-							<div class="mt-3 flex min-h-0 flex-1 flex-col gap-3">
+							<div class="mt-3 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1">
 								{#if resource?.popularity != null}
 									<span class="inline-flex w-fit items-center gap-1.5 rounded-full border border-foreground/10 bg-foreground/5 px-3 py-1 text-xs text-muted-foreground">
 										Popularity {resource.popularity}/100
 									</span>
 								{/if}
 								{#if resource?.bio}
-									<p class="max-h-32 shrink-0 overflow-y-auto pr-1 text-xs leading-relaxed whitespace-pre-line text-muted-foreground">{resource.bio}</p>
+									<p class="shrink-0 text-xs leading-relaxed whitespace-pre-line text-muted-foreground">{resource.bio}</p>
 								{/if}
 								{#if resource?.top_tracks?.length}
 									<div class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">Top tracks</div>
-									<div class="min-h-0 flex-1 overflow-y-auto pr-1">
+									<div class="shrink-0">
 										{#each resource.top_tracks as t, i (t.id)}
 											<div class="group relative flex items-center gap-3 rounded-md pr-8 hover:bg-foreground/10">
 												<button onclick={() => pickTrack(t)} class="flex min-w-0 flex-1 items-center gap-3 px-2 py-1.5 text-left">
@@ -198,6 +206,22 @@
 									</div>
 								{:else}
 									<p class="text-xs text-muted-foreground">No top tracks available.</p>
+								{/if}
+								{#if resource?.albums?.length}
+									<div class="pt-1 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">Albums</div>
+									<div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+										{#each resource.albums as a (a.id)}
+											<button onclick={() => pickAlbum(a)} title={a.title} class="group flex flex-col gap-1 rounded-lg p-1.5 text-left hover:bg-foreground/10">
+												{#if a.cover_url}
+													<img src={a.cover_url} alt="" class="aspect-square w-full rounded-md object-cover" />
+												{:else}
+													<div class="grid aspect-square w-full place-items-center rounded-md bg-foreground/5"><Disc3 class="size-6 text-muted-foreground/50" /></div>
+												{/if}
+												<div class="truncate text-xs text-foreground">{a.title}</div>
+												{#if a.year}<div class="text-[10px] text-muted-foreground">{a.year}</div>{/if}
+											</button>
+										{/each}
+									</div>
 								{/if}
 							</div>
 						{:else if trackMeta.length}

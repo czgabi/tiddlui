@@ -9,23 +9,36 @@ class DownloadStore {
 	items = $state<QueueItem[]>([]);
 	// resource shown in the metadata panel + the URL bound to the input
 	selected = $state<Resource | null>(null);
-	// collection (album/playlist/artist) a drilled-into track came from, for "back"
-	parent = $state<Resource | null>(null);
+	// breadcrumb of ancestors we drilled through (last = immediate parent), for "back"
+	trail = $state<Resource[]>([]);
 	url = $state('');
 	// track listing for the selected album/playlist (metadata panel)
 	tracklist = $state<Resource[]>([]);
 	tracklistUrl = $state<string | null>(null);
 
+	/** The resource a "back" would return to, if any. */
+	get backTarget(): Resource | null {
+		return this.trail.length ? this.trail[this.trail.length - 1] : null;
+	}
+
 	/** Select a fresh resource (search, queue, URL) — clears any drill-in trail. */
 	select(resource: Resource | null) {
 		this.selected = resource;
-		this.parent = null;
+		this.trail = [];
 	}
 
-	/** Drill from a collection into one of its tracks, remembering the way back. */
-	drillInto(track: Resource, from: Resource | null) {
-		this.parent = from;
-		this.selected = track;
+	/** Drill from the current resource into a child, remembering the way back. */
+	drillInto(child: Resource) {
+		if (this.selected) this.trail = [...this.trail, this.selected];
+		this.selected = child;
+	}
+
+	/** Step back to the previous resource in the trail. */
+	back() {
+		if (!this.trail.length) return;
+		const prev = this.trail[this.trail.length - 1];
+		this.trail = this.trail.slice(0, -1);
+		this.selected = prev;
 	}
 
 	add(item: QueueItem) {

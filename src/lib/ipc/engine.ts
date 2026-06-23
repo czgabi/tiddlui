@@ -14,6 +14,7 @@ import { auth } from '$lib/stores/auth.svelte';
 import { downloads } from '$lib/stores/download.svelte';
 import { player } from '$lib/stores/player.svelte';
 import { search } from '$lib/stores/search.svelte';
+import { library } from '$lib/stores/library.svelte';
 import { settings } from '$lib/stores/settings.svelte';
 import { ui } from '$lib/stores/ui.svelte';
 import type { JobStatus, QueueItem } from '$lib/types';
@@ -57,6 +58,9 @@ function route(ev: EngineEvent) {
 		case 'resolved':
 			downloads.select(ev.resource);
 			break;
+		case 'favorites':
+			library.receive(ev);
+			break;
 		case 'tracklist':
 			if (ev.url === downloads.tracklistUrl) downloads.tracklist = ev.tracks ?? [];
 			break;
@@ -83,6 +87,7 @@ function route(ev: EngineEvent) {
 function clearAppState() {
 	downloads.items = [];
 	downloads.select(null);
+	library.reset();
 	downloads.url = '';
 	downloads.tracklist = [];
 	downloads.tracklistUrl = null;

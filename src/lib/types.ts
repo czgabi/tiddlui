@@ -43,6 +43,9 @@ export interface Resource {
 	// artist detail (populated when an artist is resolved)
 	bio?: string | null;
 	top_tracks?: Resource[];
+	albums?: Resource[]; // artist discography
+	// album detail
+	review?: string | null; // editorial album review
 }
 
 export interface SearchResults {

@@ -143,7 +143,13 @@ def resolve_summary(api: Any, text: str) -> dict:
             pass
         return data
     if rtype == "album":
-        return album_to_dict(api.get_album(rid))
+        data = album_to_dict(api.get_album(rid))
+        try:  # editorial review (optional, not all albums have one)
+            rv = api.get_album_review(rid)
+            data["review"] = _clean_markup(getattr(rv, "text", None) or getattr(rv, "summary", None))
+        except Exception:  # noqa: BLE001
+            pass
+        return data
     if rtype == "playlist":
         return playlist_to_dict(api.get_playlist(rid))
     if rtype == "artist":
@@ -166,8 +172,11 @@ def _raw_get(api: Any, path: str, params: Optional[dict] = None) -> dict:
     return api.client.session.get(f"{_client.API_URL}/{path}", params=query).json()
 
 
-def _clean_bio(text: Optional[str]) -> Optional[str]:
-    """Strip Tidal's [wimpLink …]…[/wimpLink] markup, keeping the inner words."""
+def _clean_markup(text: Optional[str]) -> Optional[str]:
+    """Strip Tidal's [wimpLink …]…[/wimpLink] markup, keeping the inner words.
+
+    Used for both artist bios and album reviews (same markup format).
+    """
     if not text:
         return None
     cleaned = _WIMP_RE.sub("", text).replace("\r\n", "\n").strip()
@@ -208,13 +217,19 @@ def _artist_summary(api: Any, rid: str) -> dict:
     bio = None
     try:
         b = _raw_get(api, f"artists/{rid}/bio")
-        bio = _clean_bio(b.get("text") or b.get("summary"))
+        bio = _clean_markup(b.get("text") or b.get("summary"))
     except Exception:  # noqa: BLE001
         pass
     top: list[dict] = []
     try:
         tt = _raw_get(api, f"artists/{rid}/toptracks", {"limit": 10})
         top = [_raw_track_to_dict(t) for t in tt.get("items", [])]
+    except Exception:  # noqa: BLE001
+        pass
+    albums: list[dict] = []
+    try:
+        aa = api.get_artist_albums(rid)
+        albums = [album_to_dict(a) for a in (getattr(aa, "items", None) or [])]
     except Exception:  # noqa: BLE001
         pass
     return {
@@ -226,6 +241,78 @@ def _artist_summary(api: Any, rid: str) -> dict:
         "popularity": info.get("popularity"),
         "bio": bio,
         "top_tracks": top,
+        "albums": albums,
+    }
+
+
+# ---- favorites / library (raw paginated endpoints return full objects) -------
+
+def _raw_album_to_dict(d: dict) -> dict:
+    rd = d.get("releaseDate") or ""
+    year = int(rd[:4]) if isinstance(rd, str) and rd[:4].isdigit() else None
+    artists = d.get("artists") or []
+    primary = (d.get("artist") or {}).get("name") or (artists[0]["name"] if artists else "")
+    return {
+        "kind": "album",
+        "id": d.get("id"),
+        "title": d.get("title"),
+        "artist": primary,
+        "duration": d.get("duration"),
+        "cover_url": cover_url(d.get("cover")),
+        "number_of_tracks": d.get("numberOfTracks"),
+        "explicit": d.get("explicit", False),
+        "audio_quality": d.get("audioQuality"),
+        "year": year,
+    }
+
+
+def _raw_artist_to_dict(d: dict) -> dict:
+    return {
+        "kind": "artist",
+        "id": d.get("id"),
+        "title": d.get("name"),
+        "artist": "Artist",
+        "cover_url": cover_url(d.get("picture")),
+        "popularity": d.get("popularity"),
+    }
+
+
+def _raw_playlist_to_dict(d: dict) -> dict:
+    return {
+        "kind": "playlist",
+        "id": d.get("uuid"),
+        "title": d.get("title"),
+        "artist": "Playlist",
+        "duration": d.get("duration"),
+        "cover_url": cover_url(d.get("squareImage") or d.get("image")),
+        "number_of_tracks": d.get("numberOfTracks"),
+    }
+
+
+_FAV_MAPPERS = {
+    "tracks": _raw_track_to_dict,
+    "albums": _raw_album_to_dict,
+    "artists": _raw_artist_to_dict,
+    "playlists": _raw_playlist_to_dict,
+}
+
+
+def favorites(api: Any, kind: str, offset: int = 0, limit: int = 50) -> dict:
+    """One page of the user's Tidal favorites for a given kind."""
+    mapper = _FAV_MAPPERS.get(kind)
+    if mapper is None:
+        return {"kind": kind, "items": [], "total": 0, "offset": offset}
+    data = _raw_get(
+        api,
+        f"users/{api.user_id}/favorites/{kind}",
+        {"limit": limit, "offset": offset, "order": "DATE", "orderDirection": "DESC"},
+    )
+    items = [mapper(e.get("item") or {}) for e in data.get("items", [])]
+    return {
+        "kind": kind,
+        "items": items,
+        "total": data.get("totalNumberOfItems", len(items)),
+        "offset": offset,
     }
 
 

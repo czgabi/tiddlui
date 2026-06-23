@@ -6,18 +6,20 @@
 	import { platform } from '@tauri-apps/plugin-os';
 	import { open as openDialog } from '@tauri-apps/plugin-dialog';
 	import { openUrl } from '@tauri-apps/plugin-opener';
-	import { Settings, Download, Square, FolderOpen, LogIn, Disc3 } from '@lucide/svelte';
+	import { Settings, Download, Square, FolderOpen, LogIn, Disc3, Library } from '@lucide/svelte';
 
 	import SearchBar from '$lib/components/SearchBar.svelte';
 	import MetadataPanel from '$lib/components/MetadataPanel.svelte';
 	import QueueSidebar from '$lib/components/QueueSidebar.svelte';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
+	import LibraryModal from '$lib/components/LibraryModal.svelte';
 	import AuthDialog from '$lib/components/AuthDialog.svelte';
 	import DuplicateDialog from '$lib/components/DuplicateDialog.svelte';
 	import QualitySlider from '$lib/components/QualitySlider.svelte';
 	import { Button } from '$lib/components/ui/button';
 
 	import { downloads } from '$lib/stores/download.svelte';
+	import { library } from '$lib/stores/library.svelte';
 	import { settings } from '$lib/stores/settings.svelte';
 	import { ui } from '$lib/stores/ui.svelte';
 	import { auth } from '$lib/stores/auth.svelte';
@@ -130,6 +132,11 @@
 				<LogIn class="size-4" /> Sign in
 			</Button>
 		{/if}
+		{#if auth.loggedIn}
+			<Button variant="ghost" size="icon" title="Your Library" onclick={() => library.openModal()}>
+				<Library class="size-5" />
+			</Button>
+		{/if}
 		<Button variant="ghost" size="icon" title="Settings ({ui.mod}+,)" onclick={() => (settingsOpen = true)}>
 			<Settings class="size-5" />
 		</Button>
@@ -189,5 +196,6 @@
 {/key}
 
 <SettingsModal bind:open={settingsOpen} />
+<LibraryModal />
 <AuthDialog bind:open={authOpen} />
 <DuplicateDialog />

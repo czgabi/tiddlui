@@ -18,7 +18,7 @@ import requests
 import downloader
 import ffmpeg
 from protocol import emit, log, read_commands
-from resolver import do_search, expand_jobs, parse_resource, resolve_summary, track_listing
+from resolver import do_search, expand_jobs, favorites, parse_resource, resolve_summary, track_listing
 from serialize import cover_url
 from session import ApiError, Session
 
@@ -75,6 +75,8 @@ class Engine:
                 self.session.logout()
             elif name == "search":
                 await self._search(cmd)
+            elif name == "favorites":
+                await self._favorites(cmd)
             elif name == "resolve":
                 await self._resolve(cmd)
             elif name == "tracklist":
@@ -102,6 +104,12 @@ class Engine:
     async def _search(self, cmd: dict) -> None:
         results = await asyncio.to_thread(do_search, self.session.api(), cmd["query"])
         emit("search_results", request_id=cmd.get("request_id"), query=cmd["query"], **results)
+
+    async def _favorites(self, cmd: dict) -> None:
+        result = await asyncio.to_thread(
+            favorites, self.session.api(), cmd.get("kind", "tracks"), cmd.get("offset", 0)
+        )
+        emit("favorites", request_id=cmd.get("request_id"), **result)
 
     async def _resolve(self, cmd: dict) -> None:
         summary = await asyncio.to_thread(resolve_summary, self.session.api(), cmd["url"])

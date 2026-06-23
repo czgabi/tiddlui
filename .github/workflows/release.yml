@@ -1,0 +1,58 @@
+name: Build & Release
+
+# Builds the Windows installer in the cloud and attaches it to a GitHub Release.
+# Triggered only when a version tag is pushed (e.g. `git tag v1.2.0 && git push
+# origin v1.2.0`) — so day-to-day commits to main never trigger a build; you opt
+# in by tagging a release. Can also be run manually from the Actions tab.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write # needed to create the Release and upload assets
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Build Python sidecar engine
+        shell: pwsh
+        run: |
+          pip install -r sidecar/requirements.txt
+          cd sidecar
+          ./build.ps1
+
+      - name: Build app & publish release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          # Auto-injected, repo-scoped token — no manual secret to manage.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: Tiddlui ${{ github.ref_name }}
+          releaseBody: |
+            Download the `Tiddlui_*_x64-setup.exe` asset below and run it to install.
+          releaseDraft: false
+          prerelease: false

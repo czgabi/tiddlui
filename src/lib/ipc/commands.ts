@@ -23,6 +23,8 @@ export const engine = {
 	logout: () => send({ cmd: 'logout' }),
 	search: (query: string, requestId: number) =>
 		send({ cmd: 'search', query, request_id: requestId }),
+	favorites: (kind: string, offset: number, requestId: number) =>
+		send({ cmd: 'favorites', kind, offset, request_id: requestId }),
 	resolve: (url: string, requestId: number) =>
 		send({ cmd: 'resolve', url, request_id: requestId }),
 	tracklist: (url: string, requestId: number) =>
