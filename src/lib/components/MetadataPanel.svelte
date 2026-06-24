@@ -4,13 +4,14 @@
 	import { cubicOut } from 'svelte/easing';
 	import { save } from '@tauri-apps/plugin-dialog';
 	import WaveformSeek from '$lib/components/WaveformSeek.svelte';
+	import VolumeSlider from '$lib/components/VolumeSlider.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { downloads } from '$lib/stores/download.svelte';
 	import { player } from '$lib/stores/player.svelte';
 	import { ui } from '$lib/stores/ui.svelte';
 	import { engine } from '$lib/ipc/commands';
 	import { startDownload } from '$lib/queue';
-	import { previewTrack } from '$lib/preview';
+	import { previewTrack, previewList } from '$lib/preview';
 	import { formatDuration } from '$lib/format';
 	import { tidalUrl } from '$lib/url';
 	import type { Resource } from '$lib/types';
@@ -175,7 +176,10 @@
 						<div class="mt-3 flex items-center justify-between gap-2">
 							<span class="text-xs text-muted-foreground">{downloads.tracklist.length || resource?.number_of_tracks || ''} tracks</span>
 							{#if resource}
-								<Button size="sm" onclick={() => startDownload(tidalUrl(resource.kind, resource.id), { resource })}><Download class="size-4" /> Download all</Button>
+								<div class="flex items-center gap-2">
+									<Button size="sm" variant="secondary" disabled={downloads.tracklist.length === 0} onclick={() => previewList(downloads.tracklist)}><Play class="size-4" /> Play</Button>
+									<Button size="sm" onclick={() => startDownload(tidalUrl(resource.kind, resource.id), { resource })}><Download class="size-4" /> Download all</Button>
+								</div>
 							{/if}
 						</div>
 						{#if resource?.kind === 'album' && resource.review}
@@ -208,7 +212,10 @@
 									<p class="shrink-0 text-xs leading-relaxed whitespace-pre-line text-muted-foreground">{resource.bio}</p>
 								{/if}
 								{#if resource?.top_tracks?.length}
-									<div class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">Top tracks</div>
+									<div class="flex items-center justify-between gap-2">
+										<div class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">Top tracks</div>
+										<Button size="xs" variant="ghost" onclick={() => previewList(resource?.top_tracks ?? [])}><Play class="size-3.5" /> Play</Button>
+									</div>
 									<div class="shrink-0">
 										{#each resource.top_tracks as t, i (t.id)}
 											<div class="group relative flex items-center gap-3 rounded-md pr-14 hover:bg-foreground/10">
@@ -264,9 +271,14 @@
 						<button onclick={() => player.toggle()} title={player.playing ? 'Pause' : 'Play'} aria-label={player.playing ? 'Pause' : 'Play'} class="text-foreground hover:text-accent-cyan">
 							{#if player.playing}<Pause class="size-5" />{:else}<Play class="size-5" />{/if}
 						</button>
-						<button onclick={() => player.setMuted(!player.muted)} title={player.muted ? 'Unmute' : 'Mute'} aria-label={player.muted ? 'Unmute' : 'Mute'} class="text-muted-foreground hover:text-foreground">
-							{#if player.muted}<VolumeX class="size-4" />{:else}<Volume2 class="size-4" />{/if}
-						</button>
+						<div class="group/vol relative flex items-center">
+							<button onclick={() => player.setMuted(!player.muted)} title={player.muted ? 'Unmute' : 'Mute'} aria-label={player.muted ? 'Unmute' : 'Mute'} class="text-muted-foreground hover:text-foreground">
+								{#if player.muted || player.volume === 0}<VolumeX class="size-4" />{:else}<Volume2 class="size-4" />{/if}
+							</button>
+							<div class="pointer-events-none absolute bottom-full left-1/2 z-30 mb-2 -translate-x-1/2 rounded-xl border border-foreground/10 bg-popover/95 p-2.5 opacity-0 shadow-xl backdrop-blur-md transition-opacity duration-150 group-hover/vol:pointer-events-auto group-hover/vol:opacity-100">
+								<VolumeSlider />
+							</div>
+						</div>
 						<span class="min-w-0 flex-1 truncate text-xs text-muted-foreground">{player.title}</span>
 						{#if player.streaming}
 							<span class="shrink-0 rounded-full bg-accent-cyan/15 px-2 py-0.5 text-[10px] font-medium tracking-wide text-accent-cyan uppercase">Preview</span>

@@ -93,6 +93,7 @@ export interface AppSettings {
 	theme: string;
 	track_subfolders: boolean;
 	export_mp3: boolean;
+	mute_by_default: boolean;
 }
 
 export interface FfmpegStatus {

@@ -149,6 +149,85 @@ def get_stream_url(api: Any, track_id: Any, quality: str = "HIGH") -> dict:
         return {"track_id": track_id, "url": None, "error": str(exc)}
 
 
+def compute_stream_peaks(url: str, frames: int = 150) -> Optional[dict]:
+    """Decode a stream URL to coarse mono PCM via ffmpeg and build a 0..1
+    amplitude envelope — same shape the frontend computes for local files, so
+    streamed previews get the real waveform instead of a flat bar."""
+    import array
+    import math
+    import os
+    import shutil
+    import subprocess
+    import tempfile
+
+    import requests
+
+    # Fetch the audio in Python (fast, correct certs) and let ffmpeg decode a
+    # LOCAL file. ffmpeg's own HTTPS fetch is pathologically slow inside the
+    # PyInstaller-frozen exe (~30-70s vs ~2.5s) — likely inherited SSL/network
+    # env — and pipe I/O is slow there too, so we avoid both: requests downloads,
+    # ffmpeg reads a temp file and writes a temp file.
+    ffmpeg = shutil.which("ffmpeg") or "ffmpeg"
+    src_fd, src_path = tempfile.mkstemp(suffix=".m4a")
+    os.close(src_fd)
+    pcm_fd, pcm_path = tempfile.mkstemp(suffix=".pcm")
+    os.close(pcm_fd)
+    try:
+        resp = requests.get(str(url), timeout=30)
+        if resp.status_code != 200 or not resp.content:
+            return None
+        with open(src_path, "wb") as fh:
+            fh.write(resp.content)
+        cmd = [
+            ffmpeg, "-nostdin", "-y", "-hide_banner", "-loglevel", "error",
+            "-i", src_path, "-ac", "1", "-ar", "4000", "-f", "s16le", pcm_path,
+        ]
+        subprocess.run(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                       stderr=subprocess.DEVNULL, timeout=60,
+                       creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        with open(pcm_path, "rb") as fh:
+            raw = fh.read()
+    finally:
+        for path in (src_path, pcm_path):
+            try:
+                os.unlink(path)
+            except OSError:
+                pass
+
+    count = len(raw) // 2
+    if count == 0:
+        return None
+    samples = array.array("h")
+    samples.frombytes(raw[: count * 2])
+    duration = count / 4000.0
+    step = max(1, count // frames)
+    peaks: list[float] = []
+    peak_max = 1e-6
+    for f in range(frames):
+        chunk = samples[f * step : f * step + step]
+        if not chunk:
+            peaks.append(0.0)
+            continue
+        acc = 0.0
+        for x in chunk:
+            v = x / 32768.0
+            acc += v * v
+        rms = math.sqrt(acc / len(chunk))
+        peaks.append(rms)
+        peak_max = max(peak_max, rms)
+    norm = [min(1.0, (p / peak_max) ** 0.8) for p in peaks]
+    smoothed = [
+        (
+            (norm[i - 1] if i > 0 else norm[i])
+            + norm[i] * 2
+            + (norm[i + 1] if i < len(norm) - 1 else norm[i])
+        )
+        / 4
+        for i in range(len(norm))
+    ]
+    return {"peaks": smoothed, "duration": duration}
+
+
 def resolve_summary(api: Any, text: str) -> dict:
     """Lightweight metadata for the AlbumCard when a URL/result is selected."""
     rtype, rid = parse_resource(text)

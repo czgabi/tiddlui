@@ -131,6 +131,15 @@
 				<Switch id="mp3" bind:checked={settings.export_mp3} onCheckedChange={() => settings.save()} />
 			</div>
 
+			<!-- Mute by default -->
+			<div class="flex items-center justify-between gap-4">
+				<div>
+					<Label for="muteDefault" class="text-sm">Start muted</Label>
+					<p class="text-xs text-muted-foreground">Begin every session muted (volume always starts at max).</p>
+				</div>
+				<Switch id="muteDefault" bind:checked={settings.mute_by_default} onCheckedChange={() => settings.save()} />
+			</div>
+
 			<!-- Theme -->
 			<div class="flex flex-col gap-2">
 				<Label class="text-xs tracking-wide text-muted-foreground uppercase">Theme</Label>

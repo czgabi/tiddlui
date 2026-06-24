@@ -12,6 +12,7 @@ class PlayerStore {
 	title = $state('');
 	playing = $state(false);
 	muted = $state(false);
+	volume = $state(1); // linear 0..1, always defaults to max
 	currentTime = $state(0);
 	duration = $state(0);
 	analysis = $state<AudioAnalysis | null>(null);
@@ -19,6 +20,8 @@ class PlayerStore {
 	// streaming = playing a remote Tidal preview (not a downloaded file)
 	streaming = $state(false);
 	streamLoading = $state(false);
+	/** Called when a track finishes — used to advance a play-all queue. */
+	onEnded: (() => void) | null = null;
 
 	#audio: HTMLAudioElement | null = null;
 	#token = 0;
@@ -28,14 +31,35 @@ class PlayerStore {
 		if (this.#audio) return this.#audio;
 		const a = new Audio();
 		a.loop = false; // play once; don't loop at the end
-		a.muted = this.muted;
 		a.addEventListener('timeupdate', () => (this.currentTime = a.currentTime));
 		a.addEventListener('durationchange', () => (this.duration = a.duration || this.duration));
 		a.addEventListener('play', () => (this.playing = true));
 		a.addEventListener('pause', () => (this.playing = false));
-		a.addEventListener('ended', () => (this.playing = false));
+		a.addEventListener('ended', () => {
+			this.playing = false;
+			this.onEnded?.();
+		});
 		this.#audio = a;
+		this.#applyVolume();
 		return a;
+	}
+
+	#applyVolume() {
+		if (this.#audio) this.#audio.volume = this.muted ? 0 : this.volume;
+	}
+
+	/** Linear volume from a 0..1 slider; sliding to 0 mutes, up unmutes. */
+	setVolume(v: number) {
+		this.volume = Math.max(0, Math.min(1, v));
+		this.muted = this.volume === 0;
+		this.#applyVolume();
+	}
+
+	/** Set/clear the analysis for a streamed preview once peaks arrive. */
+	setStreamAnalysis(a: AudioAnalysis) {
+		if (!this.streaming) return;
+		this.analysis = a;
+		if (!this.duration && a.duration) this.duration = a.duration;
 	}
 
 	static isAudio(path?: string | null): boolean {
@@ -78,7 +102,7 @@ class PlayerStore {
 		this.currentTime = 0;
 		this.duration = 0;
 		a.src = url; // remote URL, played directly (no convertFileSrc)
-		a.muted = this.muted;
+		this.#applyVolume();
 		a.play().catch(() => {});
 	}
 
@@ -98,7 +122,7 @@ class PlayerStore {
 
 		const src = convertFileSrc(path);
 		a.src = src;
-		a.muted = this.muted;
+		this.#applyVolume();
 		// No autoplay — the user presses play. Waveform shows once analyzed.
 
 		// Reuse a cached analysis (same session) instead of decoding again.
@@ -139,10 +163,8 @@ class PlayerStore {
 
 	setMuted(m: boolean) {
 		this.muted = m;
-		if (this.#audio) {
-			this.#audio.muted = m;
-			if (!m) this.#audio.play().catch(() => {});
-		}
+		if (!m && this.volume === 0) this.volume = 1; // unmuting from zero restores full
+		this.#applyVolume();
 	}
 
 	/** Seek to a fraction (0..1). Updates currentTime optimistically so the UI

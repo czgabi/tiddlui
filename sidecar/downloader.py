@@ -192,13 +192,14 @@ def _to_mp3(src: Path) -> Path:
     """Transcode the finished file to 320 kbps MP3 (carrying tags + cover art),
     then remove the original. ffmpeg is already on PATH (provisioned at startup)."""
     dest = src.with_suffix(".mp3")
+    ffmpeg = shutil.which("ffmpeg") or "ffmpeg"
     cmd = [
-        "ffmpeg", "-y", "-i", str(src),
+        ffmpeg, "-nostdin", "-y", "-i", str(src),
         "-map", "0", "-c:a", "libmp3lame", "-b:a", "320k",
         "-c:v", "copy", "-id3v2_version", "3",
         str(dest),
     ]
-    subprocess.run(cmd, check=True, capture_output=True,
+    subprocess.run(cmd, check=True, capture_output=True, stdin=subprocess.DEVNULL,
                    creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
     src.unlink(missing_ok=True)
     return dest

@@ -20,6 +20,7 @@
 
 	import { downloads } from '$lib/stores/download.svelte';
 	import { library } from '$lib/stores/library.svelte';
+	import { player } from '$lib/stores/player.svelte';
 	import { settings } from '$lib/stores/settings.svelte';
 	import { ui } from '$lib/stores/ui.svelte';
 	import { auth } from '$lib/stores/auth.svelte';
@@ -69,6 +70,7 @@
 				/* ignore */
 			}
 			await settings.load();
+			player.muted = settings.mute_by_default; // applied when the audio element is created
 			await initEngine();
 
 			cleanupShortcuts = installShortcuts({

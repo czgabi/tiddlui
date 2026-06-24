@@ -26,16 +26,16 @@ export const engine = {
 		send({ cmd: 'search', query, request_id: requestId }),
 	favorites: (kind: string, offset: number, requestId: number) =>
 		send({ cmd: 'favorites', kind, offset, request_id: requestId }),
-	stream: (trackId: string, requestId: number) =>
-		send({ cmd: 'stream', track_id: trackId, request_id: requestId }),
+	stream: (trackId: string, requestId: number, peaks = true) =>
+		send({ cmd: 'stream', track_id: trackId, request_id: requestId, peaks }),
 	resolve: (url: string, requestId: number) =>
 		send({ cmd: 'resolve', url, request_id: requestId }),
 	tracklist: (url: string, requestId: number) =>
 		send({ cmd: 'tracklist', url, request_id: requestId }),
 	enqueue: (args: EnqueueArgs) => send({ cmd: 'enqueue', ...args }),
 	cancel: (jobId: string) => send({ cmd: 'cancel', job_id: jobId }),
-	resolveDuplicate: (jobId: string, action: 'cancel' | 'replace' | 'version') =>
-		send({ cmd: 'resolve_duplicate', job_id: jobId, action }),
+	resolveDuplicate: (jobId: string, action: 'cancel' | 'replace' | 'version', all = false) =>
+		send({ cmd: 'resolve_duplicate', job_id: jobId, action, all }),
 	deleteFile: (path: string) => send({ cmd: 'delete_file', path }),
 	saveImage: (url: string, dest: string) => send({ cmd: 'save_image', url, dest })
 };

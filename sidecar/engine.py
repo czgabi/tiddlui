@@ -18,7 +18,16 @@ import requests
 import downloader
 import ffmpeg
 from protocol import emit, log, read_commands
-from resolver import do_search, expand_jobs, favorites, get_stream_url, parse_resource, resolve_summary, track_listing
+from resolver import (
+    compute_stream_peaks,
+    do_search,
+    expand_jobs,
+    favorites,
+    get_stream_url,
+    parse_resource,
+    resolve_summary,
+    track_listing,
+)
 from serialize import cover_url
 from session import ApiError, Session
 
@@ -31,6 +40,8 @@ class Engine:
         self.jobs: asyncio.Queue[dict] = asyncio.Queue()
         self.cancelled: set[str] = set()
         self.dup_futures: dict[str, asyncio.Future] = {}
+        self.dup_all: dict[str, str] = {}  # job_id -> action to apply to all remaining
+        self.bg_tasks: set[asyncio.Task] = set()  # strong refs so tasks aren't GC'd
         self.ffmpeg_ready = threading.Event()
 
     # ---- lifecycle -------------------------------------------------------
@@ -88,9 +99,13 @@ class Engine:
             elif name == "cancel":
                 self.cancelled.add(cmd.get("job_id", ""))
             elif name == "resolve_duplicate":
-                fut = self.dup_futures.get(cmd.get("job_id", ""))
+                jid = cmd.get("job_id", "")
+                action = cmd.get("action", "cancel")
+                if cmd.get("all"):  # apply this choice to every remaining dup in the group
+                    self.dup_all[jid] = action
+                fut = self.dup_futures.get(jid)
                 if fut and not fut.done():
-                    fut.set_result(cmd.get("action", "cancel"))
+                    fut.set_result(action)
             elif name == "delete_file":
                 await asyncio.to_thread(self._delete_file, cmd.get("path", ""))
             elif name == "save_image":
@@ -114,10 +129,30 @@ class Engine:
         emit("favorites", request_id=cmd.get("request_id"), **result)
 
     async def _stream(self, cmd: dict) -> None:
+        request_id = cmd.get("request_id")
         info = await asyncio.to_thread(
             get_stream_url, self.session.api(), cmd["track_id"], cmd.get("quality", "HIGH")
         )
-        emit("stream_url", request_id=cmd.get("request_id"), **info)
+        emit("stream_url", request_id=request_id, **info)
+        # Compute the waveform in the background so playback can start instantly.
+        # Prefetch requests pass peaks=False to skip this extra ffmpeg work.
+        if info.get("url") and cmd.get("peaks", True):
+            task = asyncio.create_task(self._stream_peaks(request_id, cmd["track_id"], info["url"]))
+            self.bg_tasks.add(task)  # keep a strong ref; the loop only holds weak ones
+            task.add_done_callback(self.bg_tasks.discard)
+
+    async def _stream_peaks(self, request_id: Any, track_id: Any, url: str) -> None:
+        try:
+            # The envelope only needs a rough waveform, so decode the smallest
+            # (LOW / 96 kbps) stream — ~3x less data than the playback quality,
+            # which keeps the background compute fast.
+            low = await asyncio.to_thread(get_stream_url, self.session.api(), track_id, "LOW")
+            analysis = await asyncio.to_thread(compute_stream_peaks, low.get("url") or url)
+        except Exception as exc:  # noqa: BLE001 — waveform is best-effort
+            log(f"stream_peaks failed: {exc!r}", level="error")
+            return
+        if analysis:
+            emit("stream_peaks", request_id=request_id, track_id=track_id, **analysis)
 
     async def _resolve(self, cmd: dict) -> None:
         summary = await asyncio.to_thread(resolve_summary, self.session.api(), cmd["url"])
@@ -207,6 +242,9 @@ class Engine:
             template = "{item.title}"
 
         async def on_duplicate(name: str) -> str:
+            preset = self.dup_all.get(job_id)
+            if preset:  # user chose "apply to all" earlier in this group
+                return preset
             fut: asyncio.Future = self.loop.create_future()
             self.dup_futures[job_id] = fut
             emit("duplicate_prompt", job_id=job_id, name=name)
@@ -218,6 +256,7 @@ class Engine:
         paths: list[str] = []
         for index, tj in enumerate(tracks):
             if job_id in self.cancelled:
+                self.dup_all.pop(job_id, None)
                 emit("job_update", job_id=job_id, status="cancelled")
                 return
 
@@ -247,6 +286,7 @@ class Engine:
                 mp3=cmd.get("mp3", False),
             )
 
+        self.dup_all.pop(job_id, None)
         # Keep the original resource summary; just attach the final file path so
         # the queue row can reveal it. (path = last file for albums/playlists.)
         emit("job_update", job_id=job_id, status="complete", progress=1.0,

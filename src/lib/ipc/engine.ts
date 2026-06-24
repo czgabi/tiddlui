@@ -10,7 +10,7 @@ import {
 } from '@tauri-apps/plugin-notification';
 
 import { engine } from '$lib/ipc/commands';
-import { onStreamUrl } from '$lib/preview';
+import { onStreamUrl, onStreamPeaks } from '$lib/preview';
 import { auth } from '$lib/stores/auth.svelte';
 import { downloads } from '$lib/stores/download.svelte';
 import { player } from '$lib/stores/player.svelte';
@@ -64,6 +64,9 @@ function route(ev: EngineEvent) {
 			break;
 		case 'stream_url':
 			onStreamUrl(ev);
+			break;
+		case 'stream_peaks':
+			onStreamPeaks(ev);
 			break;
 		case 'tracklist':
 			if (ev.url === downloads.tracklistUrl) downloads.tracklist = ev.tracks ?? [];

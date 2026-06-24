@@ -15,6 +15,7 @@ class SettingsStore {
 	theme = $state(DEFAULT_THEME);
 	track_subfolders = $state(false);
 	export_mp3 = $state(false);
+	mute_by_default = $state(false);
 	loaded = $state(false);
 
 	async load() {
@@ -27,6 +28,7 @@ class SettingsStore {
 			this.theme = saved.theme ?? DEFAULT_THEME;
 			this.track_subfolders = saved.track_subfolders ?? false;
 				this.export_mp3 = saved.export_mp3 ?? false;
+				this.mute_by_default = saved.mute_by_default ?? false;
 		}
 		applyTheme(this.theme);
 		if (!this.output_path) {
@@ -53,7 +55,8 @@ class SettingsStore {
 			notify_on_complete: this.notify_on_complete,
 			theme: this.theme,
 			track_subfolders: this.track_subfolders,
-			export_mp3: this.export_mp3
+			export_mp3: this.export_mp3,
+			mute_by_default: this.mute_by_default
 		};
 	}
 
