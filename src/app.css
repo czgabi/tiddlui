@@ -466,7 +466,151 @@ body {
   --scrollbar-hover: rgba(0, 0, 0, 0.32);
 }
 
+/* aero — flagship Frutiger Aero / liquid glass (sky→grass, glossy bubbles) */
+[data-theme='aero'] {
+  --background: #bfe6ff;
+  --foreground: #0a2940;
+  --card: rgba(255, 255, 255, 0.5);
+  --card-foreground: #0a2940;
+  --popover: rgba(255, 255, 255, 0.95);
+  --popover-foreground: #0a2940;
+  --primary: #0ea5e9;
+  --primary-foreground: #ffffff;
+  --secondary: rgba(255, 255, 255, 0.62);
+  --secondary-foreground: #0a2940;
+  --muted: rgba(255, 255, 255, 0.4);
+  --muted-foreground: #386081;
+  --accent: rgba(14, 165, 233, 0.16);
+  --accent-foreground: #0a2940;
+  --border: rgba(255, 255, 255, 0.82);
+  --input: rgba(255, 255, 255, 0.62);
+  --ring: #22c1ee;
+  --glass-bg: rgba(255, 255, 255, 0.42);
+  --glass-bg-strong: rgba(255, 255, 255, 0.66);
+  --glass-border: rgba(255, 255, 255, 0.85);
+  --glass-blur: 20px;
+  --accent-cyan: #06b6d4;
+  --accent-purple: #2563eb;
+  --accent-pink: #22d3ee;
+  --accent-teal: #10b981;
+  --bd1: rgba(56, 189, 248, 0.4);
+  --bd2: rgba(16, 185, 129, 0.3);
+  --bd3: rgba(255, 255, 255, 0.5);
+  --scrollbar: rgba(10, 41, 64, 0.25);
+  --scrollbar-hover: rgba(10, 41, 64, 0.4);
+}
+
+/* Frutiger backdrop: sky→grass gradient, a top light-bloom, floating bubbles */
+[data-theme='aero'] .app-backdrop {
+  background:
+    radial-gradient(circle at 20% 84%, rgba(255, 255, 255, 0.95) 0 3px, rgba(255, 255, 255, 0.35) 4px 9px, rgba(255, 255, 255, 0) 11px),
+    radial-gradient(circle at 34% 70%, rgba(255, 255, 255, 0.9) 0 5px, rgba(255, 255, 255, 0.28) 6px 14px, rgba(255, 255, 255, 0) 16px),
+    radial-gradient(circle at 62% 88%, rgba(255, 255, 255, 0.9) 0 6px, rgba(255, 255, 255, 0.26) 8px 16px, rgba(255, 255, 255, 0) 18px),
+    radial-gradient(circle at 78% 76%, rgba(255, 255, 255, 0.95) 0 4px, rgba(255, 255, 255, 0.3) 5px 12px, rgba(255, 255, 255, 0) 14px),
+    radial-gradient(circle at 88% 58%, rgba(255, 255, 255, 0.85) 0 8px, rgba(255, 255, 255, 0.22) 10px 22px, rgba(255, 255, 255, 0) 24px),
+    radial-gradient(circle at 9% 56%, rgba(255, 255, 255, 0.8) 0 5px, rgba(255, 255, 255, 0.2) 7px 15px, rgba(255, 255, 255, 0) 17px),
+    radial-gradient(130% 80% at 50% -16%, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0) 58%),
+    linear-gradient(180deg, #9ed8ff 0%, #c7ecff 36%, #e2f7e7 68%, #abe8b6 100%);
+}
+
+/* Liquid-glass surfaces: crisp specular top, inner rim light, watery blue tint */
+[data-theme='aero'] .glass {
+  background-image: linear-gradient(
+    155deg,
+    rgba(255, 255, 255, 0.72),
+    rgba(255, 255, 255, 0.16) 42%,
+    rgba(255, 255, 255, 0.4)
+  );
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.9) brightness(1.05);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.9) brightness(1.05);
+  box-shadow:
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.95),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.45),
+    inset 0 -22px 40px rgba(120, 200, 255, 0.2),
+    0 16px 44px rgba(20, 90, 150, 0.2);
+}
+[data-theme='aero'] .glass-strong {
+  background-image: linear-gradient(155deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.42));
+}
+
+/* cream — soft warm minimal (cozy, low-contrast) */
+[data-theme='cream'] {
+  --background: #f4ecdd;
+  --foreground: #44362a;
+  --card: rgba(255, 253, 247, 0.55);
+  --card-foreground: #44362a;
+  --popover: #fbf5ea;
+  --popover-foreground: #44362a;
+  --primary: #c08457;
+  --primary-foreground: #fffaf2;
+  --secondary: rgba(255, 250, 240, 0.7);
+  --secondary-foreground: #44362a;
+  --muted: rgba(255, 250, 240, 0.5);
+  --muted-foreground: #8a7561;
+  --accent: rgba(192, 132, 87, 0.16);
+  --accent-foreground: #44362a;
+  --border: rgba(120, 90, 60, 0.16);
+  --input: rgba(255, 250, 240, 0.7);
+  --ring: #c08457;
+  --glass-bg: rgba(255, 252, 245, 0.55);
+  --glass-bg-strong: rgba(255, 252, 245, 0.78);
+  --glass-border: rgba(255, 246, 232, 0.82);
+  --glass-blur: 12px;
+  --accent-cyan: #c8895a; /* warm tones drive the gradients */
+  --accent-purple: #a96a48;
+  --accent-pink: #db9b6d;
+  --accent-teal: #b98a59;
+  --bd1: rgba(216, 170, 120, 0.3);
+  --bd2: rgba(200, 150, 110, 0.22);
+  --bd3: rgba(245, 230, 208, 0.5);
+  --scrollbar: rgba(68, 54, 42, 0.2);
+  --scrollbar-hover: rgba(68, 54, 42, 0.34);
+}
+
+/* artsy — bold warm-dark, coral/amber, film-grain texture */
+[data-theme='artsy'] {
+  --background: #1a1320;
+  --foreground: #f1e8e0;
+  --card: rgba(255, 255, 255, 0.045);
+  --card-foreground: #f1e8e0;
+  --popover: #221829;
+  --popover-foreground: #f1e8e0;
+  --primary: #ff6b5e;
+  --primary-foreground: #2a0e0b;
+  --secondary: rgba(255, 255, 255, 0.06);
+  --secondary-foreground: #f1e8e0;
+  --muted: rgba(255, 255, 255, 0.04);
+  --muted-foreground: #b59aa4;
+  --accent: rgba(255, 107, 94, 0.18);
+  --accent-foreground: #f1e8e0;
+  --border: rgba(255, 200, 180, 0.12);
+  --input: rgba(255, 255, 255, 0.06);
+  --ring: #ff6b5e;
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-bg-strong: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(255, 210, 190, 0.14);
+  --glass-blur: 14px;
+  --accent-cyan: #ffb347; /* amber */
+  --accent-purple: #ff6b5e; /* coral */
+  --accent-pink: #f25f8a;
+  --accent-teal: #ffd27d;
+  --bd1: rgba(255, 107, 94, 0.28);
+  --bd2: rgba(255, 179, 71, 0.22);
+  --bd3: rgba(242, 95, 138, 0.18);
+}
+
+/* film-grain overlay for the artsy theme */
+[data-theme='artsy'] .app-backdrop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+}
+
 /* glossy frutiger-aero refraction for the light glass themes */
+[data-theme='cream'] .glass,
 [data-theme='aqua'] .glass,
 [data-theme='verdant'] .glass,
 [data-theme='mercury'] .glass,

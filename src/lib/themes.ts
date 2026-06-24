@@ -16,7 +16,10 @@ export const THEMES: ThemeDef[] = [
 	{ id: 'obsidian', label: 'Obsidian', dark: true, swatch: ['#000000', '#5eead4', '#818cf8'] },
 	{ id: 'slate', label: 'Slate', dark: true, swatch: ['#0f1419', '#5b9dff', '#8b8bff'] },
 	{ id: 'nebula', label: 'Nebula', dark: true, swatch: ['#0d0a1f', '#a855f7', '#ec4899'] },
+	{ id: 'artsy', label: 'Artsy', dark: true, swatch: ['#1a1320', '#ff6b5e', '#ffb347'] },
 	// light / frutiger-aero
+	{ id: 'aero', label: 'Aero', dark: false, swatch: ['#bfe6ff', '#06b6d4', '#10b981'] },
+	{ id: 'cream', label: 'Cream', dark: false, swatch: ['#f4ecdd', '#c8895a', '#db9b6d'] },
 	{ id: 'aqua', label: 'Aqua', dark: false, swatch: ['#e8f3ff', '#0ea5e9', '#3b82f6'] },
 	{ id: 'verdant', label: 'Verdant', dark: false, swatch: ['#e9fbf0', '#10b981', '#34d399'] },
 	{ id: 'mercury', label: 'Mercury', dark: false, swatch: ['#eef1f5', '#64748b', '#0ea5e9'] },
