@@ -152,7 +152,7 @@ class Engine:
             log(f"stream_peaks failed: {exc!r}", level="error")
             return
         if analysis:
-            emit("stream_peaks", request_id=request_id, track_id=track_id, **analysis)
+            emit("stream_peaks", request_id=request_id, **analysis)
 
     async def _resolve(self, cmd: dict) -> None:
         summary = await asyncio.to_thread(resolve_summary, self.session.api(), cmd["url"])

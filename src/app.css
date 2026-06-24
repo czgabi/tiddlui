@@ -50,7 +50,6 @@
   --accent-cyan: #00d9ff;
   --accent-purple: #7c3aed;
   --accent-pink: #ec4899;
-  --accent-teal: #2dd4bf;
 
   /* ambient backdrop gradient stops (per-theme) */
   --bd1: rgba(0, 217, 255, 0.22);
@@ -86,7 +85,6 @@
   --color-accent-cyan: var(--accent-cyan);
   --color-accent-purple: var(--accent-purple);
   --color-accent-pink: var(--accent-pink);
-  --color-accent-teal: var(--accent-teal);
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -228,7 +226,6 @@ body {
   --accent-cyan: #56b6ff;
   --accent-purple: #8b8bff;
   --accent-pink: #ff7a9c;
-  --accent-teal: #5eead4;
   --bd1: rgba(91, 157, 255, 0.2);
   --bd2: rgba(139, 139, 255, 0.2);
   --bd3: rgba(94, 234, 212, 0.12);
@@ -257,7 +254,6 @@ body {
   --accent-cyan: #5eead4;
   --accent-purple: #818cf8;
   --accent-pink: #f472b6;
-  --accent-teal: #5eead4;
   --bd1: rgba(94, 234, 212, 0.14);
   --bd2: rgba(129, 140, 248, 0.1);
   --bd3: rgba(168, 85, 247, 0.07);
@@ -288,7 +284,6 @@ body {
   --accent-cyan: #c084fc;
   --accent-purple: #a855f7;
   --accent-pink: #ec4899;
-  --accent-teal: #818cf8;
   --bd1: rgba(168, 85, 247, 0.32);
   --bd2: rgba(236, 72, 153, 0.24);
   --bd3: rgba(99, 102, 241, 0.2);
@@ -322,7 +317,6 @@ body {
   --accent-cyan: #0ea5e9;
   --accent-purple: #3b82f6;
   --accent-pink: #06b6d4;
-  --accent-teal: #22d3ee;
   --bd1: rgba(56, 189, 248, 0.34);
   --bd2: rgba(59, 130, 246, 0.2);
   --bd3: rgba(168, 219, 255, 0.42);
@@ -356,7 +350,6 @@ body {
   --accent-cyan: #10b981;
   --accent-purple: #22d3ee;
   --accent-pink: #84cc16;
-  --accent-teal: #34d399;
   --bd1: rgba(52, 211, 153, 0.32);
   --bd2: rgba(34, 211, 238, 0.22);
   --bd3: rgba(190, 242, 210, 0.42);
@@ -390,7 +383,6 @@ body {
   --accent-cyan: #0ea5e9;
   --accent-purple: #64748b;
   --accent-pink: #94a3b8;
-  --accent-teal: #22d3ee;
   --bd1: rgba(148, 163, 184, 0.3);
   --bd2: rgba(203, 213, 225, 0.4);
   --bd3: rgba(226, 232, 240, 0.5);
@@ -424,7 +416,6 @@ body {
   --accent-cyan: #f59e0b;
   --accent-purple: #fb923c;
   --accent-pink: #f97316;
-  --accent-teal: #fbbf24;
   --bd1: rgba(251, 146, 60, 0.3);
   --bd2: rgba(245, 158, 11, 0.22);
   --bd3: rgba(255, 224, 178, 0.4);
@@ -458,7 +449,6 @@ body {
   --accent-cyan: #3f3f46;
   --accent-purple: #52525b;
   --accent-pink: #71717a;
-  --accent-teal: #52525b;
   --bd1: rgba(0, 0, 0, 0.025);
   --bd2: rgba(0, 0, 0, 0.015);
   --bd3: rgba(0, 0, 0, 0);
@@ -466,33 +456,33 @@ body {
   --scrollbar-hover: rgba(0, 0, 0, 0.32);
 }
 
-/* aero — flagship Frutiger Aero / liquid glass (sky→grass, glossy bubbles) */
+/* aero — flagship Frutiger Aero / liquid glass (XP wallpaper + silver glass) */
 [data-theme='aero'] {
+  --radius: 1.15rem; /* squircle-ish rounding everywhere */
   --background: #bfe6ff;
-  --foreground: #0a2940;
-  --card: rgba(255, 255, 255, 0.5);
-  --card-foreground: #0a2940;
-  --popover: rgba(255, 255, 255, 0.95);
-  --popover-foreground: #0a2940;
+  --foreground: #16222e; /* neutral dark — contrasts on silver glass */
+  --card: rgba(228, 233, 240, 0.5);
+  --card-foreground: #16222e;
+  --popover: rgba(236, 240, 245, 0.96);
+  --popover-foreground: #16222e;
   --primary: #0ea5e9;
   --primary-foreground: #ffffff;
-  --secondary: rgba(255, 255, 255, 0.62);
-  --secondary-foreground: #0a2940;
-  --muted: rgba(255, 255, 255, 0.4);
-  --muted-foreground: #386081;
+  --secondary: rgba(226, 231, 238, 0.5);
+  --secondary-foreground: #16222e;
+  --muted: rgba(225, 230, 237, 0.4);
+  --muted-foreground: #46586a;
   --accent: rgba(14, 165, 233, 0.16);
-  --accent-foreground: #0a2940;
-  --border: rgba(255, 255, 255, 0.82);
-  --input: rgba(255, 255, 255, 0.62);
+  --accent-foreground: #16222e;
+  --border: rgba(255, 255, 255, 0.6);
+  --input: rgba(228, 233, 240, 0.55);
   --ring: #22c1ee;
-  --glass-bg: rgba(255, 255, 255, 0.42);
-  --glass-bg-strong: rgba(255, 255, 255, 0.66);
-  --glass-border: rgba(255, 255, 255, 0.85);
-  --glass-blur: 20px;
+  --glass-bg: rgba(220, 226, 234, 0.4);
+  --glass-bg-strong: rgba(224, 229, 236, 0.62);
+  --glass-border: rgba(255, 255, 255, 0.62);
+  --glass-blur: 18px;
   --accent-cyan: #06b6d4;
   --accent-purple: #2563eb;
   --accent-pink: #22d3ee;
-  --accent-teal: #10b981;
   --bd1: rgba(56, 189, 248, 0.4);
   --bd2: rgba(16, 185, 129, 0.3);
   --bd3: rgba(255, 255, 255, 0.5);
@@ -500,37 +490,169 @@ body {
   --scrollbar-hover: rgba(10, 41, 64, 0.4);
 }
 
-/* Frutiger backdrop: sky→grass gradient, a top light-bloom, floating bubbles */
+/* Frutiger backdrop: the classic XP "Bliss" wallpaper (user-supplied). */
 [data-theme='aero'] .app-backdrop {
-  background:
-    radial-gradient(circle at 20% 84%, rgba(255, 255, 255, 0.95) 0 3px, rgba(255, 255, 255, 0.35) 4px 9px, rgba(255, 255, 255, 0) 11px),
-    radial-gradient(circle at 34% 70%, rgba(255, 255, 255, 0.9) 0 5px, rgba(255, 255, 255, 0.28) 6px 14px, rgba(255, 255, 255, 0) 16px),
-    radial-gradient(circle at 62% 88%, rgba(255, 255, 255, 0.9) 0 6px, rgba(255, 255, 255, 0.26) 8px 16px, rgba(255, 255, 255, 0) 18px),
-    radial-gradient(circle at 78% 76%, rgba(255, 255, 255, 0.95) 0 4px, rgba(255, 255, 255, 0.3) 5px 12px, rgba(255, 255, 255, 0) 14px),
-    radial-gradient(circle at 88% 58%, rgba(255, 255, 255, 0.85) 0 8px, rgba(255, 255, 255, 0.22) 10px 22px, rgba(255, 255, 255, 0) 24px),
-    radial-gradient(circle at 9% 56%, rgba(255, 255, 255, 0.8) 0 5px, rgba(255, 255, 255, 0.2) 7px 15px, rgba(255, 255, 255, 0) 17px),
-    radial-gradient(130% 80% at 50% -16%, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0) 58%),
-    linear-gradient(180deg, #9ed8ff 0%, #c7ecff 36%, #e2f7e7 68%, #abe8b6 100%);
+  background: url('/winxpbgnd.jpg') center / cover no-repeat;
 }
 
-/* Liquid-glass surfaces: crisp specular top, inner rim light, watery blue tint */
-[data-theme='aero'] .glass {
+/* Animatable angles for the rotating rim + sweeping sheen (odibixie technique) */
+@property --lg-1 {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: -75deg;
+}
+@property --lg-2 {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: -45deg;
+}
+
+/* ============ REAL LIQUID GLASS (odibixie / danilofiumi) ============ */
+/* The look = layered inset shadows for depth + a conic-gradient rim masked to
+   the border (refraction at the edge) + a diagonal sheen + a light frost. NOT
+   just blur. position:relative only where not already positioned (dialogs use
+   fixed — overriding it shifted them). */
+
+[data-theme='aero'] .glass:not(.fixed):not(.absolute),
+[data-theme='aero'] .glass-strong:not(.fixed):not(.absolute) {
+  position: relative;
+}
+[data-theme='aero'] .glass,
+[data-theme='aero'] .glass-strong {
+  isolation: isolate;
   background-image: linear-gradient(
-    155deg,
-    rgba(255, 255, 255, 0.72),
-    rgba(255, 255, 255, 0.16) 42%,
-    rgba(255, 255, 255, 0.4)
+    -75deg,
+    rgba(255, 255, 255, 0.06),
+    rgba(255, 255, 255, 0.16),
+    rgba(255, 255, 255, 0.06)
   );
-  backdrop-filter: blur(var(--glass-blur)) saturate(1.9) brightness(1.05);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.9) brightness(1.05);
+  backdrop-filter: blur(4px) saturate(0.72) brightness(0.94); /* light silver frost */
+  -webkit-backdrop-filter: blur(4px) saturate(0.72) brightness(0.94);
+  border-color: transparent;
   box-shadow:
-    inset 0 1.5px 0 rgba(255, 255, 255, 0.95),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.45),
-    inset 0 -22px 40px rgba(120, 200, 255, 0.2),
-    0 16px 44px rgba(20, 90, 150, 0.2);
+    inset 0 2px 2px rgba(255, 255, 255, 0.55),
+    inset 0 -2px 3px rgba(255, 255, 255, 0.4),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.15),
+    inset 0 -30px 55px rgba(40, 80, 120, 0.1),
+    0 18px 40px rgba(15, 50, 90, 0.22);
 }
 [data-theme='aero'] .glass-strong {
-  background-image: linear-gradient(155deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.42));
+  backdrop-filter: blur(7px) saturate(0.72) brightness(0.95);
+  -webkit-backdrop-filter: blur(7px) saturate(0.72) brightness(0.95);
+}
+/* refractive rim around panels (conic light, masked to the border ring) */
+[data-theme='aero'] .glass::after,
+[data-theme='aero'] .glass-strong::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background:
+    conic-gradient(
+      from -75deg at 50% 50%,
+      rgba(255, 255, 255, 0.7),
+      rgba(255, 255, 255, 0) 12% 38%,
+      rgba(255, 255, 255, 0.75) 50%,
+      rgba(255, 255, 255, 0) 62% 88%,
+      rgba(255, 255, 255, 0.7)
+    ),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(120, 160, 200, 0.25));
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ---- Aero buttons: full liquid-glass treatment ---- */
+[data-theme='aero'] [data-slot='button'] {
+  position: relative;
+  isolation: isolate;
+  color: #2c3540;
+  border-color: transparent;
+  background:
+    linear-gradient(var(--lg-2), transparent, rgba(255, 255, 255, 0.6) 45%, transparent 55%) 0% 50% /
+      200% 200% no-repeat,
+    linear-gradient(-75deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.08));
+  backdrop-filter: blur(3px) saturate(0.8);
+  -webkit-backdrop-filter: blur(3px) saturate(0.8);
+  box-shadow:
+    inset 0 2px 2px rgba(0, 0, 0, 0.05),
+    inset 0 -2px 2px rgba(255, 255, 255, 0.6),
+    inset 0 0 2px 3px rgba(255, 255, 255, 0.22),
+    0 4px 3px -2px rgba(0, 0, 0, 0.2);
+  transition:
+    transform 400ms cubic-bezier(0.25, 1, 0.5, 1),
+    box-shadow 400ms cubic-bezier(0.25, 1, 0.5, 1),
+    background-position 600ms cubic-bezier(0.25, 1, 0.5, 1),
+    --lg-1 500ms ease,
+    --lg-2 600ms ease;
+}
+[data-theme='aero'] [data-slot='button']:hover {
+  background-position: 30% 50%, 0 0;
+  box-shadow:
+    inset 0 2px 2px rgba(0, 0, 0, 0.05),
+    inset 0 -2px 2px rgba(255, 255, 255, 0.65),
+    inset 0 0 2px 2px rgba(255, 255, 255, 0.5),
+    0 2px 1px -1px rgba(0, 0, 0, 0.25);
+}
+/* primary stays vivid — cyan-tinted glass */
+[data-theme='aero'] [data-slot='button'].bg-primary {
+  color: #fff;
+  background:
+    linear-gradient(var(--lg-2), transparent, rgba(255, 255, 255, 0.55) 45%, transparent 55%) 0% 50% /
+      200% 200% no-repeat,
+    linear-gradient(-75deg, rgba(56, 200, 255, 0.65), rgba(31, 127, 230, 0.82), rgba(56, 200, 255, 0.65));
+}
+/* the rotating refractive rim (masked to the border, angle animates on hover) */
+[data-theme='aero'] [data-slot='button']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.25px;
+  background:
+    conic-gradient(
+      from var(--lg-1) at 50% 50%,
+      rgba(0, 0, 0, 0.35),
+      rgba(0, 0, 0, 0) 6% 40%,
+      rgba(0, 0, 0, 0.35) 50%,
+      rgba(0, 0, 0, 0) 60% 94%,
+      rgba(0, 0, 0, 0.35)
+    ),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.6));
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+}
+[data-theme='aero'] [data-slot='button']:hover::after {
+  --lg-1: -125deg;
+}
+[data-theme='aero'] [data-slot='button']:active::after {
+  --lg-1: -75deg;
+}
+
+/* Frutiger slider: glassy fill + glossy domed knob */
+[data-theme='aero'] .qs-knob {
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.95),
+    inset 0 -1px 2px rgba(0, 60, 110, 0.25),
+    0 1px 4px rgba(0, 40, 80, 0.35);
+}
+[data-theme='aero'] .qs-fill {
+  background-image: linear-gradient(90deg, #38d0ff, #1f7fe6);
 }
 
 /* cream — soft warm minimal (cozy, low-contrast) */
@@ -559,7 +681,6 @@ body {
   --accent-cyan: #c8895a; /* warm tones drive the gradients */
   --accent-purple: #a96a48;
   --accent-pink: #db9b6d;
-  --accent-teal: #b98a59;
   --bd1: rgba(216, 170, 120, 0.3);
   --bd2: rgba(200, 150, 110, 0.22);
   --bd3: rgba(245, 230, 208, 0.5);
@@ -593,7 +714,6 @@ body {
   --accent-cyan: #ffb347; /* amber */
   --accent-purple: #ff6b5e; /* coral */
   --accent-pink: #f25f8a;
-  --accent-teal: #ffd27d;
   --bd1: rgba(255, 107, 94, 0.28);
   --bd2: rgba(255, 179, 71, 0.22);
   --bd3: rgba(242, 95, 138, 0.18);

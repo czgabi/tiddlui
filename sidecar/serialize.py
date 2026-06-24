@@ -16,9 +16,6 @@ QUALITY_MAP = {
     "MAX": "HI_RES_LOSSLESS",  # up to 24-bit/192kHz
 }
 
-# tiddl's lowercase config literal used by track_qualities / templating.
-QUALITY_TO_CLI = {"LOW": "low", "NORMAL": "normal", "HIGH": "high", "MAX": "max"}
-
 
 def cover_url(uid: Optional[str], size: int = 320) -> Optional[str]:
     if not uid:

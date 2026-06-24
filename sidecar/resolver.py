@@ -143,8 +143,7 @@ def get_stream_url(api: Any, track_id: Any, quality: str = "HIGH") -> dict:
         stream = api.get_track_stream(track_id, quality)
         manifest = json.loads(base64.b64decode(stream.manifest))
         urls = manifest.get("urls") or []
-        return {"track_id": track_id, "url": urls[0] if urls else None,
-                "mime": manifest.get("mimeType")}
+        return {"track_id": track_id, "url": urls[0] if urls else None}
     except Exception as exc:  # noqa: BLE001
         return {"track_id": track_id, "url": None, "error": str(exc)}
 

@@ -1,6 +1,7 @@
-// Loaded-track player. Drives the border visualizer. Plays the local file in a
-// muted loop by default (gesture-free), so the waveform animates immediately;
-// the FFT spectrum is precomputed so it animates too, even while muted.
+// Loaded-track player. Owns one <audio> element and the waveform analysis behind
+// the seek bar. Local files are analyzed on load (peaks cached per path); Tidal
+// previews stream and take their waveform from the engine. No autoplay — the
+// user presses play.
 
 import { convertFileSrc } from '@tauri-apps/api/core';
 import { analyzeFile, type AudioAnalysis } from '$lib/audio';

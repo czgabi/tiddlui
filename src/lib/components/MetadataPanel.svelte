@@ -272,11 +272,22 @@
 							{#if player.playing}<Pause class="size-5" />{:else}<Play class="size-5" />{/if}
 						</button>
 						<div class="group/vol relative flex items-center">
-							<button onclick={() => player.setMuted(!player.muted)} title={player.muted ? 'Unmute' : 'Mute'} aria-label={player.muted ? 'Unmute' : 'Mute'} class="text-muted-foreground hover:text-foreground">
+							<button
+								onclick={() => player.setMuted(!player.muted)}
+								title={player.muted ? 'Unmute' : 'Mute'}
+								aria-label={player.muted ? 'Unmute' : 'Mute'}
+								class="relative z-40 text-muted-foreground hover:text-foreground"
+							>
 								{#if player.muted || player.volume === 0}<VolumeX class="size-4" />{:else}<Volume2 class="size-4" />{/if}
 							</button>
-							<div class="pointer-events-none absolute bottom-full left-1/2 z-30 mb-2 -translate-x-1/2 rounded-xl border border-foreground/10 bg-popover/95 p-2.5 opacity-0 shadow-xl backdrop-blur-md transition-opacity duration-150 group-hover/vol:pointer-events-auto group-hover/vol:opacity-100">
-								<VolumeSlider />
+							<!-- one continuous hover rectangle: slider pinned to the top, transparent
+							     bridge filling down over the icon so the cursor never leaves the zone -->
+							<div
+								class="pointer-events-none absolute bottom-0 left-1/2 z-30 flex h-36 w-12 -translate-x-1/2 flex-col items-center opacity-0 transition-opacity duration-150 group-hover/vol:pointer-events-auto group-hover/vol:opacity-100"
+							>
+								<div class="rounded-xl border border-foreground/10 bg-popover/95 px-2.5 pt-2.5 pb-3 shadow-xl backdrop-blur-md">
+									<VolumeSlider />
+								</div>
 							</div>
 						</div>
 						<span class="min-w-0 flex-1 truncate text-xs text-muted-foreground">{player.title}</span>

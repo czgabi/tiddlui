@@ -2,7 +2,7 @@
 //
 // Responsibilities are split across modules:
 //   - sidecar.rs       spawns the Python engine and bridges its line-delimited
-//                      JSON protocol to/from the frontend (wired in P3).
+//                      JSON protocol to/from the frontend.
 //
 // Desktop plugins (dialog / notification / fs / opener / process) are driven
 // directly from the frontend through their JS counterparts; here we only need

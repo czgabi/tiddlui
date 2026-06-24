@@ -50,6 +50,18 @@ jobs:
           cd sidecar
           ./build.ps1
 
+      # The pushed tag (e.g. v1.4.0) is the source of truth: stamp it into both
+      # version files so the installer and the in-app About box always match it.
+      - name: Sync version from tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          $v = '${{ github.ref_name }}'.TrimStart('v')
+          $repl = '${1}' + $v + '${2}'
+          (Get-Content package.json -Raw) -replace '("version":\s*")[^"]*(")', $repl | Set-Content -NoNewline package.json
+          (Get-Content src-tauri/tauri.conf.json -Raw) -replace '("version":\s*")[^"]*(")', $repl | Set-Content -NoNewline src-tauri/tauri.conf.json
+          Write-Host "Synced version to $v"
+
       - name: Build app & publish release
         uses: tauri-apps/tauri-action@v0
         env:

@@ -146,8 +146,7 @@ async def download_job(
                             speed = downloaded / max(now - started, 1e-6)
                             emit("job_update", job_id=job_id, status="downloading",
                                  progress=round(min(progress, 0.999), 4),
-                                 speed_bps=int(speed), downloaded=downloaded,
-                                 quality_label=label)
+                                 speed_bps=int(speed), quality_label=label)
                             last_emit = now
     finally:
         tmp.close()

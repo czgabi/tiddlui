@@ -127,7 +127,6 @@ class Session:
             "login_pending",
             verification_url=f"https://{device.verificationUriComplete}",
             user_code=device.userCode,
-            interval=device.interval,
             expires_in=device.expiresIn,
         )
 

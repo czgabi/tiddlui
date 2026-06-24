@@ -9,6 +9,7 @@ import {
 	sendNotification
 } from '@tauri-apps/plugin-notification';
 
+import { APP_NAME } from '$lib/about';
 import { engine } from '$lib/ipc/commands';
 import { onStreamUrl, onStreamPeaks } from '$lib/preview';
 import { auth } from '$lib/stores/auth.svelte';
@@ -153,7 +154,7 @@ async function announceDone(item?: QueueItem) {
 	try {
 		let granted = await isPermissionGranted();
 		if (!granted) granted = (await requestPermission()) === 'granted';
-		if (granted) sendNotification({ title: 'Download complete', body: title });
+		if (granted) sendNotification({ title: APP_NAME, body: `Download finished: ${title}` });
 	} catch {
 		/* best-effort */
 	}

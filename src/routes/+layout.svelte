@@ -11,7 +11,7 @@
 	});
 </script>
 
-<!-- Ambient cyan→purple→pink glow behind all glass surfaces -->
+<!-- Ambient backdrop (cyan→purple glow, or a wallpaper per theme) -->
 <div class="app-backdrop"></div>
 
 <div class="relative z-10 h-screen w-screen overflow-hidden">

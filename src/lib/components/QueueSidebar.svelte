@@ -5,7 +5,7 @@
 	import { player } from '$lib/stores/player.svelte';
 	import { ui } from '$lib/stores/ui.svelte';
 	import { engine } from '$lib/ipc/commands';
-	import { formatPercent, relativeDate } from '$lib/format';
+	import { formatPercent, formatSpeed, relativeDate } from '$lib/format';
 	import type { QueueItem } from '$lib/types';
 
 	function label(item: QueueItem): string {
@@ -81,6 +81,12 @@
 									<X class="size-4" />
 								</button>
 							</div>
+							{#if item.quality_label || item.speed_bps}
+								<div class="mt-1.5 flex items-center gap-2 text-[10px] text-muted-foreground">
+									{#if item.quality_label}<span class="truncate">{item.quality_label}</span>{/if}
+									{#if item.speed_bps}<span class="ml-auto shrink-0 tabular-nums">{formatSpeed(item.speed_bps)}</span>{/if}
+								</div>
+							{/if}
 							{#if item.total && item.total > 1}
 								<!-- album/playlist: current track + overall -->
 								<div class="mt-2 truncate text-[11px] text-muted-foreground">
