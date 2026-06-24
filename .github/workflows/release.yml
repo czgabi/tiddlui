@@ -10,6 +10,12 @@ on:
     tags: ['v*']
   workflow_dispatch:
 
+# If a tag is re-pushed (e.g. moved to a fixed commit), cancel the stale run so
+# it can't attach outdated assets to the release.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write # needed to create the Release and upload assets
 
