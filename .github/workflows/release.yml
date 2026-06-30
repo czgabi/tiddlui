@@ -62,6 +62,34 @@ jobs:
           (Get-Content src-tauri/tauri.conf.json -Raw) -replace '("version":\s*")[^"]*(")', $repl | Set-Content -NoNewline src-tauri/tauri.conf.json
           Write-Host "Synced version to $v"
 
+      # Build the release body from this tag's CHANGELOG section so the notes are
+      # attached automatically when the release is created.
+      - name: Extract release notes from CHANGELOG
+        id: notes
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          $version = '${{ github.ref_name }}'.TrimStart('v')
+          $lines = Get-Content CHANGELOG.md
+          $start = -1
+          for ($i = 0; $i -lt $lines.Count; $i++) {
+            if ($lines[$i].Trim() -eq "## $version") { $start = $i + 1; break }
+          }
+          if ($start -lt 0) {
+            $body = "See CHANGELOG.md."
+          } else {
+            $section = New-Object System.Collections.Generic.List[string]
+            for ($i = $start; $i -lt $lines.Count; $i++) {
+              if ($lines[$i] -match '^## ') { break }
+              $section.Add($lines[$i])
+            }
+            $body = ($section -join "`n").Trim()
+          }
+          $body = "$body`n`nDownload the ``Tiddlui_*_x64-setup.exe`` asset below and run it to install."
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "body<<__NOTES__"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value $body
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "__NOTES__"
+
       - name: Build app & publish release
         uses: tauri-apps/tauri-action@v0
         env:
@@ -70,7 +98,6 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: Tiddlui ${{ github.ref_name }}
-          releaseBody: |
-            Download the `Tiddlui_*_x64-setup.exe` asset below and run it to install.
+          releaseBody: ${{ steps.notes.outputs.body }}
           releaseDraft: false
           prerelease: false

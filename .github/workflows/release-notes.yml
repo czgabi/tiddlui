@@ -1,0 +1,58 @@
+name: Sync release notes
+
+# Keeps a published Release's body in sync with CHANGELOG.md, so notes can be
+# written or edited in the repo and applied without rebuilding. Runs when the
+# changelog changes on main, or manually for a specific tag. Authenticated by
+# the auto-injected GITHUB_TOKEN — no personal token needed.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - CHANGELOG.md
+      - .github/workflows/release-notes.yml
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to update (e.g. v1.4.0). Defaults to the newest CHANGELOG entry.'
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update release body from CHANGELOG
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+        run: |
+          set -euo pipefail
+          if [ -n "${INPUT_TAG:-}" ]; then
+            version="${INPUT_TAG#v}"
+          else
+            version="$(grep -m1 -E '^## ' CHANGELOG.md | sed -E 's/^##[[:space:]]+//')"
+          fi
+          tag="v${version}"
+
+          # Lines between this version's "## x.y.z" heading and the next "## ".
+          notes="$(awk -v v="## ${version}" '$0==v{g=1;next} /^## /&&g{exit} g{print}' CHANGELOG.md)"
+          if [ -z "${notes//[$'\n\t ']/}" ]; then
+            echo "No CHANGELOG section for ${version}; nothing to do."
+            exit 0
+          fi
+          if ! gh release view "${tag}" >/dev/null 2>&1; then
+            echo "Release ${tag} does not exist yet; nothing to update."
+            exit 0
+          fi
+
+          { printf '%s\n\n' "${notes}";
+            echo 'Download the `Tiddlui_*_x64-setup.exe` asset below and run it to install.';
+          } > body.md
+
+          gh release edit "${tag}" --notes-file body.md
+          echo "Updated ${tag} notes."
