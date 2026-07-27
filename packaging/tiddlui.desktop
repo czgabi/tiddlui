@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=Tiddlui
+GenericName=Tidal Downloader
+Comment=Download music from Tidal
+# WEBKIT_DISABLE_COMPOSITING_MODE works around a WebKitGTK crash on some
+# Wayland compositors (Error 71). Harmless on X11.
+Exec=env WEBKIT_DISABLE_COMPOSITING_MODE=1 tiddlui
+Icon=tiddlui
+Terminal=false
+Categories=AudioVideo;Audio;Network;
+StartupWMClass=Tiddlui
+Keywords=tidal;music;download;flac;
