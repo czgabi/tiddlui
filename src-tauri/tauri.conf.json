@@ -25,7 +25,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; img-src 'self' asset: http://asset.localhost https://resources.tidal.com data:; media-src 'self' asset: http://asset.localhost blob: data: https://*.audio.tidal.com https://*.tidal.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' ipc: http://ipc.localhost asset: http://asset.localhost ws: http://localhost:1420; font-src 'self' data:",
+      "csp": "default-src 'self'; img-src 'self' asset: http://asset.localhost https://resources.tidal.com data:; media-src 'self' asset: http://asset.localhost blob: data: http://127.0.0.1:* https://*.audio.tidal.com https://*.tidal.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' ipc: http://ipc.localhost asset: http://asset.localhost ws: http://localhost:1420; font-src 'self' data:",
       "assetProtocol": {
         "enable": true,
         "scope": ["$HOME/**", "$AUDIO/**", "$DOWNLOAD/**", "$DESKTOP/**", "$DOCUMENT/**"]
