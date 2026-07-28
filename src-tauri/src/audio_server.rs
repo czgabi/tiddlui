@@ -94,20 +94,26 @@ fn handle(request: tiny_http::Request, token: &str) {
 
     let result = match range {
         Some((start, end)) => {
+            // Stream exactly the requested window straight from disk (bounded by
+            // `Read::take`) rather than buffering it — an open-ended request like
+            // `Range: bytes=0-` covers the whole track, which could be tens of MB.
             let len = end - start + 1;
-            let mut buf = vec![0u8; len as usize];
-            if file.seek(SeekFrom::Start(start)).is_err() || file.read_exact(&mut buf).is_err() {
+            if file.seek(SeekFrom::Start(start)).is_err() {
                 let _ = request.respond(Response::empty(StatusCode(500)));
                 return;
             }
-            let resp = Response::from_data(buf)
-                .with_status_code(StatusCode(206))
-                .with_header(header("Content-Type", &ctype))
-                .with_header(header("Accept-Ranges", "bytes"))
-                .with_header(header(
-                    "Content-Range",
-                    &format!("bytes {start}-{end}/{total}"),
-                ));
+            let headers = vec![
+                header("Content-Type", &ctype),
+                header("Accept-Ranges", "bytes"),
+                header("Content-Range", &format!("bytes {start}-{end}/{total}")),
+            ];
+            let resp = Response::new(
+                StatusCode(206),
+                headers,
+                file.take(len),
+                Some(len as usize),
+                None,
+            );
             request.respond(resp)
         }
         None => {
