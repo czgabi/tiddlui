@@ -14,9 +14,15 @@ Download `Tiddlui_x.y.z_x64-setup.exe` from [Releases](../../releases), run it, 
 
 ### Arch Linux (AUR)
 
+Once the package is on the AUR:
+
 ```bash
 yay -S tiddlui        # or: paru -S tiddlui
 ```
+
+> **Not on the AUR yet.** The `PKGBUILD` lives in [`packaging/aur/`](packaging/aur/); it has to
+> be published to the AUR by the maintainer (or a co-maintainer) after a release is tagged — see
+> [`docs/PACKAGING.md`](docs/PACKAGING.md). Until then, [build from source](#build-from-source).
 
 ### Debian / Ubuntu
 
