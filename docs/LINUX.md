@@ -48,7 +48,7 @@ launch with `Error 71 (Protocol error)`, run it with compositing disabled:
 WEBKIT_DISABLE_COMPOSITING_MODE=1 tiddlui
 ```
 
-The bundled `.desktop` entry ([`packaging/tiddlui.desktop`](../packaging/tiddlui.desktop))
+The bundled `.desktop` entry ([`packaging/aur/tiddlui.desktop`](../packaging/aur/tiddlui.desktop))
 already sets this, so launching from your application menu works out of the box.
 
 ## Auth token storage (keyring)

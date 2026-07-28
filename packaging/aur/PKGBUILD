@@ -48,8 +48,13 @@ build() {
 package() {
     cd "$srcdir/$pkgname-$pkgver"
 
-    # The Tauri .deb lays out the exact install tree we want; reuse it.
     install -Dm755 "src-tauri/target/release/tiddl-gui" "$pkgdir/usr/bin/$pkgname"
+
+    # The Python engine sidecar must sit next to the main binary: the app resolves
+    # it as a Tauri sidecar at runtime, and login/search/download fail without it.
+    # ${CARCH}-unknown-linux-gnu matches the Rust host triple build.sh names it by.
+    install -Dm755 "src-tauri/binaries/tiddl-engine-${CARCH}-unknown-linux-gnu" \
+        "$pkgdir/usr/bin/tiddl-engine"
 
     install -Dm644 "$srcdir/tiddlui.desktop" \
         "$pkgdir/usr/share/applications/$pkgname.desktop"
