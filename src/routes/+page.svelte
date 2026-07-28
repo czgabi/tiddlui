@@ -65,7 +65,12 @@
 
 		(async () => {
 			try {
-				ui.isMac = (await platform()) === 'macos';
+				const os = await platform();
+				ui.isMac = os === 'macos';
+				// Expose the OS to CSS. On Linux (WebKitGTK) the compositing needed
+				// by backdrop-filter is disabled for the Wayland stability workaround,
+				// so glass surfaces fall back to opaque fills — see app.css.
+				document.documentElement.dataset.os = os;
 			} catch {
 				/* ignore */
 			}
@@ -184,7 +189,7 @@
 		<div
 			in:fly={{ y: 12, duration: 160 }}
 			out:fade={{ duration: 120 }}
-			class="fixed right-4 bottom-4 z-50 max-w-sm rounded-xl border px-4 py-2.5 text-sm backdrop-blur-md {ui
+			class="app-toast fixed right-4 bottom-4 z-50 max-w-sm rounded-xl border px-4 py-2.5 text-sm backdrop-blur-md {ui
 				.toast.kind === 'error'
 				? 'border-destructive/40 bg-destructive/15 text-destructive-foreground'
 				: 'border-foreground/10 bg-foreground/10 text-foreground'}"
