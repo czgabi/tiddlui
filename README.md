@@ -3,7 +3,6 @@
 </div>
 
 Desktop app to download from Tidal. Search or paste a link, pick a quality and download!
-(Windows only for now)
 
 ## Install
 
