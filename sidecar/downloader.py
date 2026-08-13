@@ -74,14 +74,16 @@ async def download_job(
     is_cancelled: Callable[[], bool],
     on_duplicate: Optional[DuplicateResolver] = None,
     mp3: bool = False,
-) -> None:
+) -> Optional[str]:
+    """Download one track. Returns the final file path, or None if it was
+    cancelled or failed (the caller aggregates group progress from this)."""
     track = job.track
     track_quality = QUALITY_MAP.get(gui_quality, "LOSSLESS")
 
     if not track.allowStreaming:
         emit("job_update", job_id=job_id, status="error",
              message=f"{track.title} is not streamable")
-        return
+        return None
 
     # 1. Stream descriptor + segment URLs (sync API → thread).
     stream = await asyncio.to_thread(api.get_track_stream, track.id, track_quality)
@@ -105,7 +107,7 @@ async def download_job(
             # Treat the existing file as the result (already downloaded).
             emit("job_update", job_id=job_id, status="complete",
                  quality_label=label, path=str(existing))
-            return
+            return str(existing)
         if action == "replace":
             for ext in EXTS:
                 (base.parent / f"{base.name}{ext}").unlink(missing_ok=True)
@@ -155,7 +157,7 @@ async def download_job(
     if cancelled or is_cancelled():
         _cleanup(base, tmp.name)
         emit("job_update", job_id=job_id, status="cancelled")
-        return
+        return None
 
     # 5. Finalize container / extension, tag metadata. Clean up on any failure.
     emit("job_update", job_id=job_id, status="processing", progress=0.999,
@@ -181,10 +183,11 @@ async def download_job(
     except Exception as exc:  # noqa: BLE001 — report + clean partial files
         _cleanup(base, tmp.name)
         emit("job_update", job_id=job_id, status="error", message=str(exc))
-        return
+        return None
 
     emit("job_update", job_id=job_id, status="complete", progress=1.0,
          quality_label=label, path=str(final))
+    return str(final)
 
 
 def _to_mp3(src: Path) -> Path:

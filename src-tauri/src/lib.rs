@@ -41,7 +41,9 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             sidecar::engine_send,
             config::load_settings,
-            config::save_settings
+            config::save_settings,
+            config::load_queue,
+            config::save_queue
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

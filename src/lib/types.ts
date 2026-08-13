@@ -65,6 +65,14 @@ export type JobStatus =
 	| 'error'
 	| 'cancelled';
 
+/** A track that failed inside a group download, so it can be retried alone. */
+export interface FailedTrack {
+	id: string | number;
+	title: string;
+	artist?: string;
+	message?: string;
+}
+
 export interface QueueItem {
 	id: string;
 	url: string;
@@ -80,6 +88,11 @@ export interface QueueItem {
 	quality_label?: string;
 	completed?: number;
 	total?: number;
+	/** Tracks currently downloading in parallel within this group. */
+	active_count?: number;
+	/** How many tracks failed inside the group (0 on a clean run). */
+	failed?: number;
+	failed_tracks?: FailedTrack[];
 	path?: string;
 	message?: string;
 	created_at: number;
@@ -94,6 +107,8 @@ export interface AppSettings {
 	track_subfolders: boolean;
 	export_mp3: boolean;
 	mute_by_default: boolean;
+	/** Tracks downloaded at once within one album/playlist (1-5). */
+	download_concurrency: number;
 }
 
 export interface FfmpegStatus {

@@ -1,10 +1,11 @@
-// Helper to kick off a download: registers a local queue item and tells the engine.
+// Helpers to kick off a download: register a local queue item and tell the engine.
 
 import { engine } from '$lib/ipc/commands';
 import { downloads } from '$lib/stores/download.svelte';
 import { settings } from '$lib/stores/settings.svelte';
 import { ui } from '$lib/stores/ui.svelte';
-import type { Quality, Resource } from '$lib/types';
+import { tidalUrl } from '$lib/url';
+import type { Quality, QueueItem, Resource } from '$lib/types';
 
 export function startDownload(
 	url: string,
@@ -39,7 +40,41 @@ export function startDownload(
 		output_path: settings.output_path,
 		template: settings.template,
 		subfolders: settings.track_subfolders,
-		mp3: settings.export_mp3
+		mp3: settings.export_mp3,
+		concurrency: settings.download_concurrency
 	});
 	return id;
+}
+
+/** Re-run a finished entry: drop the old row so it isn't duplicated, queue it again. */
+export function retryDownload(item: QueueItem): void {
+	downloads.remove(item.id);
+	startDownload(item.url, { quality: item.quality, resource: item.resource, force: true });
+}
+
+/** Queue just the tracks that failed inside a group, individually. */
+export function retryFailedTracks(item: QueueItem): number {
+	const tracks = item.failed_tracks ?? [];
+	let queued = 0;
+	for (const t of tracks) {
+		if (startDownload(tidalUrl('track', t.id), { force: true })) queued++;
+	}
+	if (queued) {
+		// The failures have been handed to new jobs; clear them off the old row.
+		downloads.update(item.id, { failed: 0, failed_tracks: [] });
+		ui.notify(`Retrying ${queued} track${queued === 1 ? '' : 's'}`);
+	}
+	return queued;
+}
+
+/** Re-run every failed or cancelled entry in the history. */
+export function retryAllFailed(): number {
+	const targets = downloads.items.filter(
+		(i) => i.status === 'error' || i.status === 'cancelled'
+	);
+	for (const item of targets) retryDownload(item);
+	if (targets.length) {
+		ui.notify(`Retrying ${targets.length} download${targets.length === 1 ? '' : 's'}`);
+	}
+	return targets.length;
 }

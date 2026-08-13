@@ -1,11 +1,12 @@
 <script lang="ts">
-	import { ChevronRight, X, FolderOpen, Download, CheckCircle2, AlertCircle, Trash2 } from '@lucide/svelte';
+	import { ChevronRight, X, FolderOpen, Download, CheckCircle2, AlertCircle, Trash2, RotateCw } from '@lucide/svelte';
 	import { revealItemInDir } from '@tauri-apps/plugin-opener';
 	import { downloads } from '$lib/stores/download.svelte';
 	import { player } from '$lib/stores/player.svelte';
 	import { ui } from '$lib/stores/ui.svelte';
 	import { engine } from '$lib/ipc/commands';
 	import { formatPercent, formatSpeed, relativeDate } from '$lib/format';
+	import { retryDownload, retryFailedTracks, retryAllFailed } from '$lib/queue';
 	import type { QueueItem } from '$lib/types';
 
 	function label(item: QueueItem): string {
@@ -40,6 +41,11 @@
 		downloads.clearHistory();
 		player.clearCache();
 	}
+
+	// Entries that failed outright or were cancelled — offered as one bulk retry.
+	const failedCount = $derived(
+		downloads.items.filter((i) => i.status === 'error' || i.status === 'cancelled').length
+	);
 </script>
 
 <aside
@@ -81,9 +87,12 @@
 									<X class="size-4" />
 								</button>
 							</div>
-							{#if item.quality_label || item.speed_bps}
+							{#if item.quality_label || item.speed_bps || item.active_count}
 								<div class="mt-1.5 flex items-center gap-2 text-[10px] text-muted-foreground">
 									{#if item.quality_label}<span class="truncate">{item.quality_label}</span>{/if}
+									{#if (item.active_count ?? 0) > 1}
+										<span class="shrink-0 rounded-full bg-accent-cyan/15 px-1.5 text-accent-cyan">{item.active_count} at once</span>
+									{/if}
 									{#if item.speed_bps}<span class="ml-auto shrink-0 tabular-nums">{formatSpeed(item.speed_bps)}</span>{/if}
 								</div>
 							{/if}
@@ -135,16 +144,27 @@
 			<section>
 				<div class="flex items-center justify-between px-1 pb-2">
 					<h3 class="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">History</h3>
-					{#if downloads.history.length}
-						<button
-							onclick={clearHistory}
-							title="Clear history"
-							aria-label="Clear history"
-							class="text-muted-foreground hover:text-destructive"
-						>
-							<Trash2 class="size-3.5" />
-						</button>
-					{/if}
+					<div class="flex items-center gap-2">
+						{#if failedCount > 0}
+							<button
+								onclick={() => retryAllFailed()}
+								title="Retry every failed download"
+								class="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-accent-cyan"
+							>
+								<RotateCw class="size-3.5" /> Retry {failedCount}
+							</button>
+						{/if}
+						{#if downloads.history.length}
+							<button
+								onclick={clearHistory}
+								title="Clear history"
+								aria-label="Clear history"
+								class="text-muted-foreground hover:text-destructive"
+							>
+								<Trash2 class="size-3.5" />
+							</button>
+						{/if}
+					</div>
 				</div>
 				{#if downloads.history.length === 0}
 					<p class="px-1 text-xs text-muted-foreground">No downloads yet.</p>
@@ -168,9 +188,23 @@
 							class="min-w-0 flex-1 text-left disabled:cursor-default"
 						>
 							<div class="truncate text-sm text-muted-foreground hover:text-foreground">{label(item)}</div>
-							<div class="text-[11px] text-muted-foreground">{relativeDate(item.created_at)}</div>
+							<div class="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+								<span>{relativeDate(item.created_at)}</span>
+								{#if (item.failed ?? 0) > 0}
+									<span class="text-destructive">{item.failed} failed</span>
+								{/if}
+							</div>
 						</button>
 						<div class="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+							{#if (item.failed ?? 0) > 0}
+								<button title="Retry the failed tracks" aria-label="Retry failed tracks" onclick={() => retryFailedTracks(item)} class="text-muted-foreground hover:text-accent-cyan">
+									<RotateCw class="size-3.5" />
+								</button>
+							{:else if item.status !== 'complete'}
+								<button title="Download again" aria-label="Download again" onclick={() => retryDownload(item)} class="text-muted-foreground hover:text-accent-cyan">
+									<RotateCw class="size-3.5" />
+								</button>
+							{/if}
 							{#if item.status === 'complete' && item.path}
 								<button title="Reveal in folder" aria-label="Reveal in folder" onclick={() => reveal(item)} class="text-muted-foreground hover:text-foreground">
 									<FolderOpen class="size-3.5" />

@@ -16,6 +16,7 @@ class SettingsStore {
 	track_subfolders = $state(false);
 	export_mp3 = $state(false);
 	mute_by_default = $state(false);
+	download_concurrency = $state(3);
 	loaded = $state(false);
 
 	async load() {
@@ -29,6 +30,7 @@ class SettingsStore {
 			this.track_subfolders = saved.track_subfolders ?? false;
 				this.export_mp3 = saved.export_mp3 ?? false;
 				this.mute_by_default = saved.mute_by_default ?? false;
+				this.download_concurrency = Math.min(5, Math.max(1, saved.download_concurrency ?? 3));
 		}
 		applyTheme(this.theme);
 		if (!this.output_path) {
@@ -56,7 +58,8 @@ class SettingsStore {
 			theme: this.theme,
 			track_subfolders: this.track_subfolders,
 			export_mp3: this.export_mp3,
-			mute_by_default: this.mute_by_default
+			mute_by_default: this.mute_by_default,
+			download_concurrency: this.download_concurrency
 		};
 	}
 

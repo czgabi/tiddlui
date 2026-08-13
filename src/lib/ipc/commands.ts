@@ -1,7 +1,7 @@
 // Typed wrappers over Tauri commands + the engine stdio protocol.
 
 import { invoke } from '@tauri-apps/api/core';
-import type { AppSettings, Quality } from '$lib/types';
+import type { AppSettings, Quality, QueueItem } from '$lib/types';
 
 function send(payload: Record<string, unknown>): Promise<void> {
 	return invoke('engine_send', { payload });
@@ -15,6 +15,7 @@ export interface EnqueueArgs {
 	template: string;
 	subfolders: boolean;
 	mp3: boolean;
+	concurrency: number;
 }
 
 export const engine = {
@@ -43,4 +44,9 @@ export const engine = {
 export const settingsApi = {
 	load: () => invoke<AppSettings | null>('load_settings'),
 	save: (settings: AppSettings) => invoke('save_settings', { settings })
+};
+
+export const queueApi = {
+	load: () => invoke<QueueItem[] | null>('load_queue'),
+	save: (queue: QueueItem[]) => invoke('save_queue', { queue })
 };

@@ -71,6 +71,7 @@
 			}
 			await settings.load();
 			player.muted = settings.mute_by_default; // applied when the audio element is created
+			await downloads.load(); // restore the queue/history from the last session
 			await initEngine();
 
 			cleanupShortcuts = installShortcuts({

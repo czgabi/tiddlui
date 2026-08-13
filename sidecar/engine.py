@@ -10,8 +10,9 @@ from __future__ import annotations
 
 import asyncio
 import threading
+import time
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import requests
 
@@ -30,6 +31,11 @@ from resolver import (
 )
 from serialize import cover_url
 from session import ApiError, Session
+
+DEFAULT_CONCURRENCY = 3
+MAX_CONCURRENCY = 5
+PROGRESS_INTERVAL = 0.12  # seconds between group progress events
+FAILED_REPORT_CAP = 50    # cap the failure list sent to the UI
 
 
 class Engine:
@@ -241,57 +247,137 @@ class Engine:
         if rtype == "track" and not cmd.get("subfolders", False):
             template = "{item.title}"
 
+        try:
+            concurrency = int(cmd.get("concurrency") or DEFAULT_CONCURRENCY)
+        except (TypeError, ValueError):
+            concurrency = DEFAULT_CONCURRENCY
+        concurrency = max(1, min(concurrency, MAX_CONCURRENCY))
+
+        # One prompt at a time: concurrent tracks hitting a duplicate would
+        # otherwise overwrite each other's pending future in dup_futures.
+        dup_lock = asyncio.Lock()
+
         async def on_duplicate(name: str) -> str:
             preset = self.dup_all.get(job_id)
             if preset:  # user chose "apply to all" earlier in this group
                 return preset
-            fut: asyncio.Future = self.loop.create_future()
-            self.dup_futures[job_id] = fut
-            emit("duplicate_prompt", job_id=job_id, name=name)
-            try:
-                return await fut
-            finally:
-                self.dup_futures.pop(job_id, None)
+            async with dup_lock:
+                preset = self.dup_all.get(job_id)  # may have been set while waiting
+                if preset:
+                    return preset
+                fut: asyncio.Future = self.loop.create_future()
+                self.dup_futures[job_id] = fut
+                emit("duplicate_prompt", job_id=job_id, name=name)
+                try:
+                    return await fut
+                finally:
+                    self.dup_futures.pop(job_id, None)
 
-        paths: list[str] = []
-        for index, tj in enumerate(tracks):
-            if job_id in self.cancelled:
-                self.dup_all.pop(job_id, None)
-                emit("job_update", job_id=job_id, status="cancelled")
+        # Group progress is aggregated across the running tracks: each reports a
+        # 0..1 fraction, so the group sits at (finished + sum of fractions)/total.
+        # Emitting is throttled here rather than per track — otherwise every extra
+        # worker would multiply the event traffic by one more stream.
+        active: dict[int, float] = {}      # track index -> its 0..1 progress
+        speeds: dict[int, int] = {}        # track index -> bytes/sec
+        labels: dict[int, str] = {}        # track index -> quality label
+        results: list[tuple[int, str]] = []
+        failed: list[dict] = []
+        finished = 0
+        last_emit = 0.0
+
+        def emit_progress(force: bool = False) -> None:
+            nonlocal last_emit
+            now = time.monotonic()
+            if not force and now - last_emit < PROGRESS_INTERVAL:
                 return
+            last_emit = now
+            # Report the lowest-index running track, so the label tracks the
+            # album order instead of flickering between concurrent workers.
+            lead = min(active) if active else None
+            tj = tracks[lead] if lead is not None else None
+            emit("job_update", job_id=job_id, status="downloading",
+                 progress=round(min((finished + sum(active.values())) / total, 0.999), 4),
+                 track_progress=round(active.get(lead, 0.0), 4) if lead is not None else 0.0,
+                 completed=finished, total=total, active_count=len(active),
+                 current_title=tj.track.title if tj else "",
+                 current_artist=(tj.track.artist.name if tj and tj.track.artist else ""),
+                 cover_url=cover_url(tj.track.album.cover) if tj else None,
+                 speed_bps=sum(speeds.values()),  # combined throughput
+                 quality_label=labels.get(lead) if lead is not None else None)
 
-            def relay(event_type: str, **f: Any) -> None:
-                if event_type != "job_update":
+        semaphore = asyncio.Semaphore(concurrency)
+
+        async def run_track(index: int, tj: Any) -> None:
+            nonlocal finished
+            error: Optional[str] = None
+            path: Optional[str] = None
+            async with semaphore:
+                if job_id in self.cancelled:
                     return
-                status = f.get("status")
-                if status in ("downloading", "processing"):
-                    track_progress = f.get("progress", 0.0)
-                    emit("job_update", job_id=job_id, status="downloading",
-                         progress=round((index + track_progress) / total, 4),
-                         track_progress=round(track_progress, 4),
-                         completed=index, total=total,
-                         current_title=tj.track.title,
-                         current_artist=tj.track.artist.name if tj.track.artist else "",
-                         cover_url=cover_url(tj.track.album.cover),
-                         speed_bps=f.get("speed_bps", 0),
-                         quality_label=f.get("quality_label"))
-                elif status == "complete" and f.get("path"):
-                    paths.append(f["path"])
-                elif status == "error":
-                    log(f"track failed: {tj.track.title}: {f.get('message')}", "error")
 
-            await downloader.download_job(
-                api, tj, cmd["quality"], cmd["output_path"], template,
-                job_id, relay, lambda: job_id in self.cancelled, on_duplicate,
-                mp3=cmd.get("mp3", False),
-            )
+                def relay(event_type: str, **f: Any) -> None:
+                    nonlocal error
+                    if event_type != "job_update":
+                        return
+                    status = f.get("status")
+                    if status in ("downloading", "processing"):
+                        active[index] = f.get("progress", 0.0)
+                        speeds[index] = f.get("speed_bps", 0) or 0
+                        if f.get("quality_label"):
+                            labels[index] = f["quality_label"]
+                        emit_progress()
+                    elif status == "error":
+                        error = f.get("message") or "download failed"
+
+                active[index] = 0.0
+                speeds[index] = 0
+                try:
+                    path = await downloader.download_job(
+                        api, tj, cmd["quality"], cmd["output_path"], template,
+                        job_id, relay, lambda: job_id in self.cancelled, on_duplicate,
+                        mp3=cmd.get("mp3", False),
+                    )
+                except Exception as exc:  # noqa: BLE001 — one track must not sink the group
+                    error = str(exc)
+                finally:
+                    active.pop(index, None)
+                    speeds.pop(index, None)
+
+            finished += 1
+            if path:
+                results.append((index, path))
+            elif job_id not in self.cancelled:
+                failed.append({
+                    "id": tj.track.id,
+                    "title": tj.track.title,
+                    "artist": tj.track.artist.name if tj.track.artist else "",
+                    "message": error or "download failed",
+                })
+                log(f"track failed: {tj.track.title}: {error}", "error")
+            emit_progress(force=True)
+
+        await asyncio.gather(*(run_track(i, tj) for i, tj in enumerate(tracks)))
 
         self.dup_all.pop(job_id, None)
+        if job_id in self.cancelled:
+            emit("job_update", job_id=job_id, status="cancelled")
+            return
+
+        # Nothing landed: report the group as failed rather than a silent success.
+        if failed and not results:
+            emit("job_update", job_id=job_id, status="error",
+                 message=f"all {len(failed)} track(s) failed",
+                 completed=total, total=total,
+                 failed=len(failed), failed_tracks=failed[:FAILED_REPORT_CAP])
+            return
+
         # Keep the original resource summary; just attach the final file path so
-        # the queue row can reveal it. (path = last file for albums/playlists.)
+        # the queue row can reveal it. (path = last track for albums/playlists.)
+        results.sort()
         emit("job_update", job_id=job_id, status="complete", progress=1.0,
              completed=total, total=total,
-             path=paths[-1] if paths else cmd.get("output_path"))
+             path=results[-1][1] if results else cmd.get("output_path"),
+             failed=len(failed), failed_tracks=failed[:FAILED_REPORT_CAP])
 
 
 async def _amain() -> None:

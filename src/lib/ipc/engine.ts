@@ -93,7 +93,7 @@ function route(ev: EngineEvent) {
 }
 
 function clearAppState() {
-	downloads.items = [];
+	downloads.reset();
 	downloads.select(null);
 	library.reset();
 	downloads.url = '';
@@ -121,6 +121,9 @@ function handleJob(ev: EngineEvent) {
 	if (ev.quality_label !== undefined) patch.quality_label = ev.quality_label;
 	if (ev.completed !== undefined) patch.completed = ev.completed;
 	if (ev.total !== undefined) patch.total = ev.total;
+	if (ev.active_count !== undefined) patch.active_count = ev.active_count;
+	if (ev.failed !== undefined) patch.failed = ev.failed;
+	if (ev.failed_tracks !== undefined) patch.failed_tracks = ev.failed_tracks;
 	if (ev.path !== undefined) patch.path = ev.path;
 	if (ev.message !== undefined) patch.message = ev.message;
 
@@ -128,6 +131,10 @@ function handleJob(ev: EngineEvent) {
 
 	if (ev.status === 'complete') {
 		const item = downloads.items.find((i) => i.id === ev.job_id);
+		const failed = ev.failed ?? 0;
+		if (failed > 0) {
+			ui.notify(`Finished with ${failed} failed track${failed === 1 ? '' : 's'}`, 'error');
+		}
 		announceDone(item);
 		// Load the finished track into the player so its waveform comes alive.
 		if (ev.path) player.load(ev.path, item?.resource?.title ?? item?.current_title ?? '');

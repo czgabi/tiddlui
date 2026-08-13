@@ -140,6 +140,36 @@
 				<Switch id="muteDefault" bind:checked={settings.mute_by_default} onCheckedChange={() => settings.save()} />
 			</div>
 
+			<!-- Simultaneous downloads -->
+			<div class="flex flex-col gap-2">
+				<Label class="text-xs tracking-wide text-muted-foreground uppercase">Simultaneous downloads</Label>
+				<p class="text-xs text-muted-foreground">
+					Tracks fetched at once from an album or playlist. Higher is faster, but Tidal may
+					throttle heavy use.
+				</p>
+				<Select.Root
+					type="single"
+					value={String(settings.download_concurrency)}
+					onValueChange={(v) => {
+						settings.download_concurrency = Number(v);
+						settings.save();
+					}}
+				>
+					<Select.Trigger class="w-full">
+						{settings.download_concurrency === 1
+							? 'One at a time'
+							: `${settings.download_concurrency} at a time`}
+					</Select.Trigger>
+					<Select.Content>
+						{#each [1, 2, 3, 4, 5] as n (n)}
+							<Select.Item value={String(n)} label={n === 1 ? 'One at a time' : `${n} at a time`}>
+								{n === 1 ? 'One at a time' : `${n} at a time`}
+							</Select.Item>
+						{/each}
+					</Select.Content>
+				</Select.Root>
+			</div>
+
 			<!-- Theme -->
 			<div class="flex flex-col gap-2">
 				<Label class="text-xs tracking-wide text-muted-foreground uppercase">Theme</Label>
