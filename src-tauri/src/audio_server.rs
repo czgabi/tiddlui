@@ -7,24 +7,74 @@
 // source that honours range requests. So on Linux we serve local files from a
 // tiny loopback HTTP server and point the `<audio>` element at it.
 //
-// The server binds to 127.0.0.1 on an ephemeral port and guards every request
-// with a per-run random token, so only this app (which knows the token) can
-// read files through it. It only serves existing regular files, GET only.
+// Two independent guards keep that from becoming a general file-read service:
+//
+//   1. a per-run random token in the URL path, so another local process can't
+//      just guess the address, and
+//   2. an allowlist — only paths the app itself passed to `local_audio_url` are
+//      served. Without it the server would hand out any file the user can read,
+//      which is far broader than the `asset://` scope it stands in for.
+//
+// Paths are canonicalized on both sides, so a different spelling of the same
+// file (symlink, `..`, percent-encoding) can't slip past the allowlist.
 
-/// Base URL of the running server, e.g. `http://127.0.0.1:53421/<token>`.
-/// Empty when the server is not running (non-Linux, or start-up failed —
-/// playback then simply fails, as it did before this existed).
-pub struct AudioBase(pub String);
+use std::collections::HashSet;
+use std::path::PathBuf;
+use std::sync::{Arc, Mutex};
 
-/// Return the base URL so the frontend can build `<base>/<url-encoded-path>`.
+/// Base URL of the running server plus the files approved for playback.
+/// `base` is empty when the server isn't running (non-Linux, or start-up
+/// failed) — playback then falls back to `asset://` as it did before.
+pub struct AudioBase {
+    base: String,
+    allowed: Arc<Mutex<HashSet<PathBuf>>>,
+}
+
+/// Approve `path` for playback and return the URL the `<audio>` element should
+/// use. Empty string when the server isn't running or the path isn't a readable
+/// file; the caller then falls back to `asset://`.
 #[tauri::command]
-pub fn local_audio_base(state: tauri::State<'_, AudioBase>) -> String {
-    state.0.clone()
+pub fn local_audio_url(state: tauri::State<'_, AudioBase>, path: String) -> String {
+    if state.base.is_empty() {
+        return String::new();
+    }
+    let Ok(canonical) = std::fs::canonicalize(&path) else {
+        return String::new();
+    };
+    if !canonical.is_file() {
+        return String::new();
+    }
+    let encoded = encode_component(&canonical.to_string_lossy());
+    if state.allowed.lock().map(|mut s| s.insert(canonical)).is_err() {
+        return String::new();
+    }
+    format!("{}/{}", state.base, encoded)
+}
+
+/// Percent-encode a path so it survives as a single URL segment.
+fn encode_component(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    for b in s.as_bytes() {
+        match b {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                out.push(*b as char)
+            }
+            _ => out.push_str(&format!("%{b:02X}")),
+        }
+    }
+    out
+}
+
+/// Start the server (Linux only) and return the state for Tauri to manage.
+pub fn start() -> AudioBase {
+    let allowed: Arc<Mutex<HashSet<PathBuf>>> = Arc::new(Mutex::new(HashSet::new()));
+    let base = serve(allowed.clone()).unwrap_or_default();
+    AudioBase { base, allowed }
 }
 
 /// No-op on platforms where `<audio>` plays `asset://` directly.
 #[cfg(not(target_os = "linux"))]
-pub fn start() -> Option<String> {
+fn serve(_allowed: Arc<Mutex<HashSet<PathBuf>>>) -> Option<String> {
     None
 }
 
@@ -33,13 +83,10 @@ use std::fs::File;
 #[cfg(target_os = "linux")]
 use std::io::{Read, Seek, SeekFrom};
 #[cfg(target_os = "linux")]
-use std::path::Path;
-#[cfg(target_os = "linux")]
-use tiny_http::{Header, Response, Server, StatusCode};
+use tiny_http::{Header, Request, Response, Server, StatusCode};
 
-/// Start the server on a background thread. Returns its base URL (or `None`).
 #[cfg(target_os = "linux")]
-pub fn start() -> Option<String> {
+fn serve(allowed: Arc<Mutex<HashSet<PathBuf>>>) -> Option<String> {
     let server = Server::http("127.0.0.1:0").ok()?;
     let port = server.server_addr().to_ip()?.port();
     let token = random_token();
@@ -50,7 +97,16 @@ pub fn start() -> Option<String> {
         .name("tiddlui-audio".into())
         .spawn(move || {
             for request in server.incoming_requests() {
-                handle(request, &expected);
+                // Drop tokenless requests before spending a thread on them, then
+                // serve the rest concurrently: a range response streams for as
+                // long as playback lasts, and a sequential loop would make the
+                // next request (a seek) wait for it to finish.
+                let Some(path) = requested_path(request.url(), &expected) else {
+                    let _ = request.respond(Response::empty(StatusCode(403)));
+                    continue;
+                };
+                let allowed = allowed.clone();
+                std::thread::spawn(move || serve_file(request, path, &allowed));
             }
         })
         .ok()?;
@@ -58,30 +114,29 @@ pub fn start() -> Option<String> {
     Some(base)
 }
 
+/// Pull the decoded file path out of `/<token>/<percent-encoded-path>`.
+/// `None` when the token doesn't match.
 #[cfg(target_os = "linux")]
-fn handle(request: tiny_http::Request, token: &str) {
-    // URL shape: /<token>/<percent-encoded-absolute-path>
-    let url = request.url().to_string();
-    let rest = match url.strip_prefix('/').and_then(|u| u.strip_prefix(token)) {
-        Some(r) => r.strip_prefix('/').unwrap_or(r),
-        None => {
-            let _ = request.respond(Response::empty(StatusCode(403)));
-            return;
-        }
-    };
-    let path_str = percent_decode(rest.split('?').next().unwrap_or(rest));
-    let path = Path::new(&path_str);
-    if !path.is_file() {
+fn requested_path(url: &str, token: &str) -> Option<String> {
+    let rest = url.strip_prefix('/')?.strip_prefix(token)?;
+    let rest = rest.strip_prefix('/').unwrap_or(rest);
+    Some(percent_decode(rest.split('?').next().unwrap_or(rest)))
+}
+
+#[cfg(target_os = "linux")]
+fn serve_file(request: Request, path_str: String, allowed: &Mutex<HashSet<PathBuf>>) {
+    let approved = std::fs::canonicalize(&path_str)
+        .ok()
+        .and_then(|c| allowed.lock().ok().map(|s| s.contains(&c)))
+        .unwrap_or(false);
+    if !approved {
         let _ = request.respond(Response::empty(StatusCode(404)));
         return;
     }
 
-    let mut file = match File::open(path) {
-        Ok(f) => f,
-        Err(_) => {
-            let _ = request.respond(Response::empty(StatusCode(404)));
-            return;
-        }
+    let Ok(mut file) = File::open(&path_str) else {
+        let _ = request.respond(Response::empty(StatusCode(404)));
+        return;
     };
     let total = file.metadata().map(|m| m.len()).unwrap_or(0);
     let ctype = content_type(&path_str);
@@ -92,11 +147,11 @@ fn handle(request: tiny_http::Request, token: &str) {
         .find(|h| h.field.equiv("Range"))
         .and_then(|h| parse_range(h.value.as_str(), total));
 
-    let result = match range {
+    let _ = match range {
         Some((start, end)) => {
             // Stream exactly the requested window straight from disk (bounded by
             // `Read::take`) rather than buffering it — an open-ended request like
-            // `Range: bytes=0-` covers the whole track, which could be tens of MB.
+            // `Range: bytes=0-` covers the whole track, which can be tens of MB.
             let len = end - start + 1;
             if file.seek(SeekFrom::Start(start)).is_err() {
                 let _ = request.respond(Response::empty(StatusCode(500)));
@@ -107,26 +162,25 @@ fn handle(request: tiny_http::Request, token: &str) {
                 header("Accept-Ranges", "bytes"),
                 header("Content-Range", &format!("bytes {start}-{end}/{total}")),
             ];
-            let resp = Response::new(
+            request.respond(Response::new(
                 StatusCode(206),
                 headers,
                 file.take(len),
                 Some(len as usize),
                 None,
-            );
-            request.respond(resp)
+            ))
         }
-        None => {
-            let resp = Response::from_file(file)
+        None => request.respond(
+            Response::from_file(file)
                 .with_header(header("Content-Type", &ctype))
-                .with_header(header("Accept-Ranges", "bytes"));
-            request.respond(resp)
-        }
+                .with_header(header("Accept-Ranges", "bytes")),
+        ),
     };
-    let _ = result;
 }
 
-/// Parse a single `bytes=start-end` range against the known total size.
+/// Parse a single `bytes=` range against the known total size. Handles the
+/// `bytes=-N` suffix form (final N bytes), which players use to read trailing
+/// metadata.
 #[cfg(target_os = "linux")]
 fn parse_range(value: &str, total: u64) -> Option<(u64, u64)> {
     if total == 0 {
@@ -134,12 +188,18 @@ fn parse_range(value: &str, total: u64) -> Option<(u64, u64)> {
     }
     let spec = value.trim().strip_prefix("bytes=")?;
     let (a, b) = spec.split_once('-')?;
-    let start: u64 = if a.is_empty() { 0 } else { a.trim().parse().ok()? };
-    let end: u64 = if b.trim().is_empty() {
-        total - 1
-    } else {
-        b.trim().parse().ok()?
-    };
+    let (a, b) = (a.trim(), b.trim());
+
+    if a.is_empty() {
+        let n: u64 = b.parse().ok()?;
+        if n == 0 {
+            return None;
+        }
+        return Some((total.saturating_sub(n), total - 1));
+    }
+
+    let start: u64 = a.parse().ok()?;
+    let end: u64 = if b.is_empty() { total - 1 } else { b.parse().ok()? };
     let end = end.min(total - 1);
     if start > end {
         return None;
@@ -149,7 +209,7 @@ fn parse_range(value: &str, total: u64) -> Option<(u64, u64)> {
 
 #[cfg(target_os = "linux")]
 fn content_type(path: &str) -> String {
-    let ext = Path::new(path)
+    let ext = std::path::Path::new(path)
         .extension()
         .and_then(|e| e.to_str())
         .unwrap_or("")
@@ -171,6 +231,8 @@ fn header(field: &str, value: &str) -> Header {
         .expect("static header is always valid")
 }
 
+/// Decode `%XX` escapes. Works on bytes: slicing the `&str` by byte index would
+/// panic if a multi-byte character followed a `%`.
 #[cfg(target_os = "linux")]
 fn percent_decode(s: &str) -> String {
     let bytes = s.as_bytes();
@@ -178,8 +240,10 @@ fn percent_decode(s: &str) -> String {
     let mut i = 0;
     while i < bytes.len() {
         if bytes[i] == b'%' && i + 2 < bytes.len() {
-            if let Ok(byte) = u8::from_str_radix(&s[i + 1..i + 3], 16) {
-                out.push(byte);
+            let hi = (bytes[i + 1] as char).to_digit(16);
+            let lo = (bytes[i + 2] as char).to_digit(16);
+            if let (Some(hi), Some(lo)) = (hi, lo) {
+                out.push((hi * 16 + lo) as u8);
                 i += 3;
                 continue;
             }
@@ -203,7 +267,7 @@ fn random_token() -> String {
             .duration_since(std::time::UNIX_EPOCH)
             .map(|d| d.as_nanos())
             .unwrap_or(0);
-        buf[..16].copy_from_slice(&nanos.to_le_bytes());
+        buf.copy_from_slice(&nanos.to_le_bytes());
     }
     buf.iter().map(|b| format!("{b:02x}")).collect()
 }

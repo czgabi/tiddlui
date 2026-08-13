@@ -22,7 +22,8 @@
 - A duplicate-file prompt could be lost when two tracks hit one at the same time.
 - On Linux, downloaded tracks now play and seek correctly. WebKitGTK's GStreamer
   pipeline rejects Tauri's `asset://` scheme and errors on large `blob:` URLs, so
-  the app streams local files from a tiny loopback HTTP server with range support
+  the app streams local files from a tiny loopback HTTP server with range support,
+  guarded by a per-run token and an allowlist of the files the app opened
   (Windows/macOS keep playing `asset://` directly, unchanged).
 - On Linux, glass panels (Library, dialogs, banners) no longer render as
   near-transparent — the compositing that `backdrop-filter` needs is disabled by

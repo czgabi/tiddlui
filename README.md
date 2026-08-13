@@ -125,7 +125,6 @@ so you can download things you already saved without hunting for links.
 
 ### The player
 
-<img src="assets/screenshots/player.png" alt="The built-in player with waveform" width="820" />
 
 Finished downloads load into the player automatically. You get a seekable
 waveform drawn from the actual audio, a volume slider that appears when you
@@ -133,7 +132,6 @@ hover the speaker, and click-anywhere scrubbing.
 
 ### Themes
 
-<img src="assets/screenshots/aero.png" alt="The Aero liquid-glass theme" width="820" />
 
 Twelve themes, five dark and seven light. The flagship is **Aero** — a
 liquid-glass look with a refractive rim that shifts as you hover. There's also
@@ -144,7 +142,6 @@ Tangerine and Paper.
 
 ## Settings
 
-<img src="assets/screenshots/settings.png" alt="The settings dialog" width="820" />
 
 | Setting | What it does |
 | --- | --- |

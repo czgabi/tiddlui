@@ -154,6 +154,24 @@ jobs:
             package.json src-tauri/tauri.conf.json
           echo "Synced version to ${v}"
 
+      # Re-read the notes so this job passes the same body as the Windows job —
+      # tauri-action updates the release it finds, and an omitted body would
+      # blank the notes the first job set.
+      - name: Extract release notes from CHANGELOG
+        id: notes
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          notes="$(awk -v v="## ${version}" '$0==v{g=1;next} /^## /&&g{exit} g{print}' CHANGELOG.md)"
+          [ -n "$(echo "${notes}" | tr -d '[:space:]')" ] || notes="See CHANGELOG.md."
+          {
+            echo "body<<__NOTES__"
+            echo "${notes}"
+            echo ""
+            echo 'Download the `Tiddlui_*_x64-setup.exe` asset below and run it to install.'
+            echo "__NOTES__"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Build app & upload Linux assets
         uses: tauri-apps/tauri-action@v0
         env:
@@ -161,6 +179,7 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: Tiddlui ${{ github.ref_name }}
+          releaseBody: ${{ steps.notes.outputs.body }}
           releaseDraft: false
           prerelease: false
           args: --bundles deb,appimage

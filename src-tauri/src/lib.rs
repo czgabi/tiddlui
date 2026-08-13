@@ -38,9 +38,8 @@ pub fn run() {
                 eprintln!("[tiddl] engine sidecar not started: {err}");
             }
             // Linux: local HTTP audio server for downloaded-track playback.
-            // Empty base on other platforms (they use asset:// directly).
-            let audio_base = audio_server::start().unwrap_or_default();
-            app.manage(audio_server::AudioBase(audio_base));
+            // Inert on other platforms (they use asset:// directly).
+            app.manage(audio_server::start());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -49,7 +48,7 @@ pub fn run() {
             config::save_settings,
             config::load_queue,
             config::save_queue,
-            audio_server::local_audio_base
+            audio_server::local_audio_url
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
