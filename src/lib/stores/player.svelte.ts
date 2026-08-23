@@ -8,6 +8,18 @@ import { analyzeFile, type AudioAnalysis } from '$lib/audio';
 
 const AUDIO_EXT = /\.(flac|m4a|mp3|wav|ogg|aac|opus)$/i;
 
+const isLinux = () => document.documentElement.dataset.os === 'linux';
+
+// On Linux the <audio> element streams downloaded files from a local loopback
+// HTTP server (see src-tauri/src/audio_server.rs); this caches its base URL.
+let audioBasePromise: Promise<string> | null = null;
+function localAudioBase(): Promise<string> {
+	audioBasePromise ??= import('@tauri-apps/api/core')
+		.then((c) => c.invoke<string>('local_audio_base'))
+		.catch(() => '');
+	return audioBasePromise;
+}
+
 class PlayerStore {
 	path = $state<string | null>(null);
 	title = $state('');
@@ -121,8 +133,19 @@ class PlayerStore {
 		this.currentTime = 0;
 		this.duration = 0;
 
+		// `src` (asset://) is used for the waveform analysis below — WebKitGTK can
+		// fetch it, it just can't *play* it. For playback on Linux we point the
+		// <audio> element at the local loopback HTTP server, which streams the file
+		// with range support (asset:// and large blob: URLs both fail there). Other
+		// platforms play the asset:// source directly, unchanged.
 		const src = convertFileSrc(path);
-		a.src = src;
+		if (isLinux()) {
+			const base = await localAudioBase();
+			if (token !== this.#token) return; // superseded by a newer load()
+			a.src = base ? `${base}/${encodeURIComponent(path)}` : src;
+		} else {
+			a.src = src;
+		}
 		this.#applyVolume();
 		// No autoplay — the user presses play. Waveform shows once analyzed.
 

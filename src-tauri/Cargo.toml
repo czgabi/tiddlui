@@ -31,3 +31,10 @@ serde_json = "1"
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-window-state = "2"
 
+# Linux only: a tiny localhost HTTP server with range support streams downloaded
+# files to the <audio> element. WebKitGTK's media pipeline rejects Tauri's
+# asset:// custom scheme and errors on large blob: URLs, but plays an HTTP source
+# that honours Range requests. See src/audio_server.rs.
+[target.'cfg(target_os = "linux")'.dependencies]
+tiny_http = "0.12"
+
