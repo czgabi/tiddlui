@@ -10,6 +10,7 @@ on:
     branches: [main]
     paths:
       - CHANGELOG.md
+      - .github/release-footer.md
       - .github/workflows/release-notes.yml
   workflow_dispatch:
     inputs:
@@ -51,7 +52,7 @@ jobs:
           fi
 
           { printf '%s\n\n' "${notes}";
-            echo 'Download the `Tiddlui_*_x64-setup.exe` asset below and run it to install.';
+            cat .github/release-footer.md;
           } > body.md
 
           gh release edit "${tag}" --notes-file body.md

@@ -86,7 +86,9 @@ jobs:
             }
             $body = ($section -join "`n").Trim()
           }
-          $body = "$body`n`nDownload the ``Tiddlui_*_x64-setup.exe`` asset below and run it to install."
+          # Shared footer so both jobs attach identical, platform-neutral notes.
+          $footer = Get-Content .github/release-footer.md -Raw
+          $body = "$body`n`n$footer"
           Add-Content -Path $env:GITHUB_OUTPUT -Value "body<<__NOTES__"
           Add-Content -Path $env:GITHUB_OUTPUT -Value $body
           Add-Content -Path $env:GITHUB_OUTPUT -Value "__NOTES__"
@@ -168,7 +170,7 @@ jobs:
             echo "body<<__NOTES__"
             echo "${notes}"
             echo ""
-            echo 'Download the `Tiddlui_*_x64-setup.exe` asset below and run it to install.'
+            cat .github/release-footer.md
             echo "__NOTES__"
           } >> "$GITHUB_OUTPUT"
 
