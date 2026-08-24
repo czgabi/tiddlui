@@ -169,6 +169,29 @@ body {
   background: var(--glass-bg-strong);
 }
 
+/* --- Linux (WebKitGTK) opaque-surface fallback -----------------------------
+   The Wayland stability workaround (WEBKIT_DISABLE_COMPOSITING_MODE=1, shipped
+   in the .desktop entry) disables the compositing that backdrop-filter needs,
+   so frosted-glass surfaces would render as near-transparent. Fall back to an
+   opaque, theme-derived fill on Linux. `data-os` is set on <html> at startup. */
+:root[data-os='linux'] .glass,
+:root[data-os='linux'] .glass-strong {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: color-mix(in srgb, var(--background) 92%, #ffffff 7%);
+}
+:root[data-os='linux'] .glass-strong {
+  background: color-mix(in srgb, var(--background) 85%, #ffffff 12%);
+}
+:root[data-os='linux'] [data-slot='dialog-overlay'] {
+  background: rgba(0, 0, 0, 0.6);
+}
+:root[data-os='linux'] .app-toast {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: color-mix(in srgb, var(--background) 86%, #ffffff 9%);
+}
+
 /* Thin custom scrollbars to match the dark theme */
 ::-webkit-scrollbar {
   width: 10px;

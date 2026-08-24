@@ -54,6 +54,21 @@ def ensure_ffmpeg() -> bool:
         emit("ffmpeg_status", state="ready")
         return True
 
+    if platform.system() == "Linux":
+        # On Linux ffmpeg is a system package (not auto-downloaded like the
+        # Windows static build), so point the user at their package manager.
+        emit(
+            "ffmpeg_status",
+            state="missing",
+            message=(
+                "ffmpeg not found. Install it with:\n"
+                "  sudo pacman -S ffmpeg        (Arch/Manjaro)\n"
+                "  sudo apt install ffmpeg      (Debian/Ubuntu)\n"
+                "Then restart Tiddlui."
+            ),
+        )
+        return False
+
     if platform.system() != "Windows":
         emit(
             "ffmpeg_status",

@@ -1,0 +1,68 @@
+# Maintainer: Adam Roth <adamroth598@gmail.com>
+pkgname=tiddlui
+pkgver=1.4.0
+pkgrel=1
+pkgdesc="Glassmorphic desktop GUI for the tiddl Tidal downloader"
+arch=('x86_64')
+url="https://github.com/czgabi/tiddlui"
+license=('MIT')
+depends=(
+    'webkit2gtk-4.1'
+    'gst-plugins-base'
+    'gst-plugins-good'
+    'gst-plugins-bad'
+    'gst-libav'
+    'gnome-keyring'
+    'ffmpeg'
+)
+makedepends=(
+    'nodejs'
+    'npm'
+    'rust'
+    'python'
+    'python-pip'
+)
+options=('!strip' '!debug')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/czgabi/tiddlui/archive/refs/tags/v$pkgver.tar.gz"
+        "tiddlui.desktop")
+# Run `updpkgsums` after bumping pkgver to fill in the release tarball checksum.
+sha256sums=('SKIP'
+            'SKIP')
+
+build() {
+    cd "$srcdir/$pkgname-$pkgver"
+
+    # 1. Build the Python engine sidecar into a single-file executable.
+    cd sidecar
+    python -m venv .venv
+    .venv/bin/pip install --no-cache-dir -r requirements.txt pyinstaller
+    bash build.sh
+    cd ..
+
+    # 2. Build the Tauri app. (This step fetches npm/cargo deps from the network,
+    #    as is typical for Tauri/Electron AUR packages.)
+    npm ci
+    npm run tauri build -- --bundles deb
+}
+
+package() {
+    cd "$srcdir/$pkgname-$pkgver"
+
+    install -Dm755 "src-tauri/target/release/tiddl-gui" "$pkgdir/usr/bin/$pkgname"
+
+    # The Python engine sidecar must sit next to the main binary: the app resolves
+    # it as a Tauri sidecar at runtime, and login/search/download fail without it.
+    # ${CARCH}-unknown-linux-gnu matches the Rust host triple build.sh names it by.
+    install -Dm755 "src-tauri/binaries/tiddl-engine-${CARCH}-unknown-linux-gnu" \
+        "$pkgdir/usr/bin/tiddl-engine"
+
+    install -Dm644 "$srcdir/tiddlui.desktop" \
+        "$pkgdir/usr/share/applications/$pkgname.desktop"
+
+    install -Dm644 "src-tauri/icons/128x128.png" \
+        "$pkgdir/usr/share/icons/hicolor/128x128/apps/$pkgname.png"
+    install -Dm644 "src-tauri/icons/32x32.png" \
+        "$pkgdir/usr/share/icons/hicolor/32x32/apps/$pkgname.png"
+
+    install -Dm644 "LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

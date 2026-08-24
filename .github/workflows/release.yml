@@ -1,6 +1,7 @@
 name: Build & Release
 
-# Builds the Windows installer in the cloud and attaches it to a GitHub Release.
+# Builds the Windows installer and the Linux packages (.deb + .AppImage) in the
+# cloud and attaches them to a single GitHub Release.
 # Triggered only when a version tag is pushed (e.g. `git tag v1.2.0 && git push
 # origin v1.2.0`) — so day-to-day commits to main never trigger a build; you opt
 # in by tagging a release. Can also be run manually from the Actions tab.
@@ -101,3 +102,65 @@ jobs:
           releaseBody: ${{ steps.notes.outputs.body }}
           releaseDraft: false
           prerelease: false
+
+  # Builds the Linux packages and appends them to the same release the Windows
+  # job created (so a single tag yields both platforms' assets).
+  release-linux:
+    runs-on: ubuntu-22.04
+    needs: release
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev \
+            build-essential curl wget file libssl-dev \
+            gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
+            gstreamer1.0-plugins-bad gstreamer1.0-libav ffmpeg
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install frontend dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Build Python sidecar engine
+        run: |
+          pip install -r sidecar/requirements.txt pyinstaller
+          cd sidecar
+          bash build.sh
+
+      # Stamp the pushed tag (e.g. v1.4.0) into the version files so the built
+      # packages match it, mirroring the Windows job.
+      - name: Sync version from tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          sed -i -E "s/(\"version\":[[:space:]]*\")[^\"]*(\")/\1${v}\2/" \
+            package.json src-tauri/tauri.conf.json
+          echo "Synced version to ${v}"
+
+      - name: Build app & upload Linux assets
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: Tiddlui ${{ github.ref_name }}
+          releaseDraft: false
+          prerelease: false
+          args: --bundles deb,appimage

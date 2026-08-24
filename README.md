@@ -19,23 +19,46 @@ Search it, preview it, download it — no command line needed.
 - Browse your own Tidal favourites without opening Tidal
 - Keeps your files named and foldered the way you want them
 
-Windows only for the moment. Linux support is in review.
+Runs on Windows and Linux.
 
 ---
 
 ## Install
 
-1. Download **`Tiddlui_x.y.z_x64-setup.exe`** from [Releases](../../releases)
-2. Run it, then open Tiddlui
-3. Click **Sign in** and approve the app in the Tidal page that opens
+You need your own Tidal subscription. Quality is capped by your plan, and you
+sign in on Tidal's own website — Tiddlui never sees your password.
 
-That's it. You sign in on Tidal's own website — Tiddlui never sees your password.
+### Windows
 
-> **ffmpeg** is required to convert audio. If you don't already have it, Tiddlui
-> downloads it automatically the first time you launch. You'll see a short
-> "Preparing ffmpeg…" banner.
+Download **`Tiddlui_x.y.z_x64-setup.exe`** from [Releases](../../releases), run
+it, then click **Sign in**.
 
-You need your own Tidal subscription. Quality is capped by your plan.
+ffmpeg is required to convert audio. If you don't already have it, Tiddlui
+downloads it automatically on first launch — you'll see a short
+"Preparing ffmpeg…" banner.
+
+### Arch Linux
+
+```bash
+yay -S tiddlui        # or: paru -S tiddlui
+```
+
+> **Not on the AUR yet.** The `PKGBUILD` lives in [`packaging/aur/`](packaging/aur/)
+> and has to be published by a maintainer after a release is tagged — see
+> [`docs/PACKAGING.md`](docs/PACKAGING.md). Until then, build from source.
+
+### Debian / Ubuntu
+
+```bash
+sudo apt install ./Tiddlui_x.y.z_amd64.deb
+sudo apt install ffmpeg          # required, not bundled on Linux
+```
+
+A distro-agnostic `.AppImage` is attached to every release too.
+
+> On Linux, ffmpeg comes from your package manager and auth tokens are stored
+> through the Secret Service API. See [`docs/LINUX.md`](docs/LINUX.md) for
+> runtime notes on Wayland, keyring and audio codecs.
 
 ---
 
@@ -172,21 +195,29 @@ Settings shows a live preview of the result as you type.
 ## Build from source
 
 You need **Node 20+**, **Rust**, **Python 3.13+** and **ffmpeg**.
+[`docs/BUILD.md`](docs/BUILD.md) has the full walkthrough including per-distro
+dependency lists.
 
 ```bash
 npm install
 ```
 
-Build the Python engine into the executable Tauri bundles as a sidecar. A
-virtualenv is recommended — Python 3.13+ is required, and many systems refuse
+Then build the Python engine into the executable Tauri bundles as a sidecar. A
+virtualenv is recommended — Python 3.13+ is required and many systems refuse
 global installs:
 
 ```bash
 cd sidecar
-py -3.13 -m venv .venv                       # or python3.13 -m venv .venv
-.venv/Scripts/pip install -r requirements.txt   # Linux/macOS: .venv/bin/pip
-.venv/Scripts/Activate.ps1                      # Linux/macOS: source .venv/bin/activate
-./build.ps1                                     # Linux/macOS: bash build.sh
+python -m venv .venv
+
+# Windows
+.venv/Scripts/pip install -r requirements.txt
+.venv/Scripts/Activate.ps1 && ./build.ps1
+
+# Linux / macOS
+.venv/bin/pip install -r requirements.txt
+bash build.sh
+
 cd ..
 ```
 
@@ -197,12 +228,13 @@ npm run tauri dev      # hot-reloading dev window
 npm run tauri build    # installer in src-tauri/target/release/bundle
 ```
 
-The engine is a compiled binary, so **changes to `sidecar/*.py` need
-`build.ps1` re-run and the app restarted.** Frontend changes hot-reload.
+The engine is a compiled binary, so **changes to `sidecar/*.py` need the build
+script re-run and the app restarted.** Frontend changes hot-reload.
 
-Releases are automated: push a `vX.Y.Z` tag and CI builds the installer, stamps
-the version into `package.json` and `tauri.conf.json`, and attaches the notes
-from `CHANGELOG.md` to the GitHub Release.
+Releases are automated: push a `vX.Y.Z` tag and CI builds the Windows installer
+and the Linux `.deb` + `.AppImage`, stamps the version into `package.json` and
+`tauri.conf.json`, and attaches the notes from `CHANGELOG.md` to the GitHub
+Release. Packaging details are in [`docs/PACKAGING.md`](docs/PACKAGING.md).
 
 ---
 
@@ -238,6 +270,11 @@ engine reports progress at the group level as
 `(finished + sum of the running tracks' fractions) / total`, throttled to one
 event every ~120 ms so extra parallel workers don't multiply the traffic.
 
+On Linux, playback takes a detour: WebKitGTK's GStreamer pipeline refuses
+Tauri's `asset://` scheme and chokes on large `blob:` URLs, so downloaded files
+are served to the `<audio>` element from a loopback HTTP server with range
+support. See [`docs/LINUX.md`](docs/LINUX.md).
+
 **Why a separate Python process?** [`tiddl`](https://github.com/oskvr37/tiddl)
 does the hard part — Tidal's API, stream manifests, tagging. Running it as a
 sidecar means we use it as-is rather than reimplementing it in Rust.
@@ -250,12 +287,15 @@ src/                 SvelteKit frontend
   lib/stores/        app state — downloads, player, settings, search, auth
   lib/ipc/           command wrappers + the engine event router
   app.css            design tokens and all twelve themes
-src-tauri/src/       Rust — sidecar bridge, settings/queue persistence
+src-tauri/src/       Rust — sidecar bridge, settings/queue persistence,
+                     Linux audio server
 sidecar/             Python engine
   engine.py          command loop, download worker, progress aggregation
   resolver.py        search, ranking, URL resolution, waveform peaks
   downloader.py      one track: fetch, extract, tag, optional MP3
   session.py         auth and token storage
+docs/                build, Linux runtime and packaging guides
+packaging/aur/       PKGBUILD and desktop entry for the AUR
 ```
 
 ---
@@ -264,10 +304,10 @@ sidecar/             Python engine
 
 - **Login uses Tidal's device flow.** You authenticate on Tidal's own site;
   the app never sees your password.
-- **Tokens live in the Windows Credential Manager**, never in a plaintext file.
-  Signing out deletes them.
+- **Tokens live in the OS keychain** — Windows Credential Manager, or the Secret
+  Service on Linux — never in a plaintext file. Signing out deletes them.
 - **No accounts, keys or telemetry** ship with the app. It talks to Tidal's API
-  and, on first launch, downloads ffmpeg.
+  and, on Windows, downloads ffmpeg on first launch.
 - Settings and your queue are stored as plain JSON in the app config folder.
   They contain titles and file paths, no credentials.
 
@@ -278,7 +318,8 @@ Found a security issue? See [SECURITY.md](SECURITY.md).
 ## Troubleshooting
 
 **"Preparing ffmpeg…" never finishes.** Check your connection, then restart. If
-it keeps failing, install ffmpeg yourself and make sure it's on your `PATH`.
+it keeps failing, install ffmpeg yourself and make sure it's on your `PATH`. On
+Linux, install it with your package manager.
 
 **A download failed.** Hover the history row and hit the retry arrow. If a whole
 album failed, check you're still signed in.
@@ -288,6 +329,9 @@ in Settings. Tidal may throttle aggressive fetching.
 
 **Quality is lower than expected.** Hi-Res needs a plan that includes it; the
 queue row shows the quality you actually got.
+
+**Linux: no audio, or glass panels look transparent.** Both are known WebKitGTK
+quirks with documented workarounds — see [`docs/LINUX.md`](docs/LINUX.md).
 
 ---
 

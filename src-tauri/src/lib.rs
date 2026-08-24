@@ -8,6 +8,7 @@
 // directly from the frontend through their JS counterparts; here we only need
 // to register them. Window geometry is persisted by the window-state plugin.
 
+mod audio_server;
 mod config;
 mod sidecar;
 
@@ -36,6 +37,10 @@ pub fn run() {
             if let Err(err) = sidecar::start(app.handle()) {
                 eprintln!("[tiddl] engine sidecar not started: {err}");
             }
+            // Linux: local HTTP audio server for downloaded-track playback.
+            // Empty base on other platforms (they use asset:// directly).
+            let audio_base = audio_server::start().unwrap_or_default();
+            app.manage(audio_server::AudioBase(audio_base));
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -43,7 +48,8 @@ pub fn run() {
             config::load_settings,
             config::save_settings,
             config::load_queue,
-            config::save_queue
+            config::save_queue,
+            audio_server::local_audio_base
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
