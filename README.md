@@ -5,7 +5,6 @@
 **A desktop app for downloading your Tidal music in lossless quality.**
 Search it, preview it, download it — no command line needed.
 
-<img src="assets/screenshots/hero.png" alt="The Tiddlui main window with an album loaded" width="900" />
 
 </div>
 
@@ -64,7 +63,6 @@ A distro-agnostic `.AppImage` is attached to every release too.
 
 ## Your first download
 
-<img src="assets/screenshots/search.png" alt="Search results" width="820" />
 
 1. **Find something.** Type in the search bar (`Ctrl+K`), or paste a Tidal link.
 2. **Pick a quality** with the slider at the bottom.
@@ -105,7 +103,6 @@ car stereos and older players. Tags and cover art carry across.
 
 ### Downloads, queue and retry
 
-<img src="assets/screenshots/downloading.png" alt="Queue with a download in progress" width="820" />
 
 Albums and playlists download several tracks at once — 3 by default, adjustable
 from 1 to 5. The queue shows combined speed and the real quality of each file.
