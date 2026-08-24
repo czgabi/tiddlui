@@ -16,11 +16,11 @@ The Tauri bundle output lands in `src-tauri/target/release/bundle/{deb,appimage,
 
 ## GitHub release flow (CI)
 
-[`.github/workflows/release-linux.yml`](../.github/workflows/release-linux.yml) builds the Linux
-artifacts on `ubuntu-latest` and attaches them to a GitHub Release. It runs when a `v*` tag is
+The `release-linux` job in [`.github/workflows/release.yml`](../.github/workflows/release.yml)
+builds the Linux artifacts on `ubuntu-22.04` and attaches them to a GitHub Release. It runs when a `v*` tag is
 pushed (and can be triggered manually via *workflow_dispatch*):
 
-1. Tag a release: `git tag v1.4.0 && git push origin v1.4.0`.
+1. Tag a release: `git tag v1.5.0 && git push origin v1.5.0`.
 2. CI installs the WebKitGTK/GStreamer/ffmpeg deps, builds the sidecar and the app, and uploads
    the `.deb` + `.AppImage` to the release.
 
@@ -44,7 +44,7 @@ git clone ssh://aur@aur.archlinux.org/tiddlui.git aur-tiddlui
 cp PKGBUILD .SRCINFO aur-tiddlui/
 cd aur-tiddlui
 git add PKGBUILD .SRCINFO
-git commit -m "tiddlui 1.4.0"
+git commit -m "tiddlui 1.5.0"
 git push
 ```
 

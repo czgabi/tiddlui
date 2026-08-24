@@ -1,6 +1,6 @@
 # Maintainer: Adam Roth <adamroth598@gmail.com>
 pkgname=tiddlui
-pkgver=1.4.0
+pkgver=1.5.0
 pkgrel=1
 pkgdesc="Glassmorphic desktop GUI for the tiddl Tidal downloader"
 arch=('x86_64')
