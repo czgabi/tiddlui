@@ -116,7 +116,9 @@
 	oncontextmenu={(e) => e.preventDefault()}
 />
 
-<div class="flex h-full flex-col gap-4 p-4">
+<!-- Content is capped and centred: on a wide monitor the tracklist would
+     otherwise hug the left edge with half the window empty. -->
+<div class="mx-auto flex h-full w-full max-w-[1500px] flex-col gap-4 p-4">
 	<!-- Header -->
 	<header class="flex items-center gap-3">
 		<button

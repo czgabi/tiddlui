@@ -16,6 +16,7 @@ vite.config.ts.timestamp-*
 /src-tauri/binaries/
 
 # Python sidecar build artifacts
+/sidecar/.venv
 /sidecar/dist
 /sidecar/build_pyi
 /sidecar/*.spec
