@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.5.0
 
 ### Added
 - Albums and playlists download several tracks at once (3 by default, set it
