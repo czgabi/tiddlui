@@ -133,6 +133,18 @@ summary,
 :root {
   --lift: 1.02;
   --press: 0.985;
+  --lift-art: 1.05; /* artwork can afford a little more than a control */
+}
+
+/* Cover art grows under the pointer. Driven by the same variable scheme as the
+   controls so switching motion off removes the growth itself, not just its
+   easing — an instant jump to 105% is still motion as far as the eye is
+   concerned. */
+.hover-grow {
+  transition: transform 200ms ease-out;
+}
+.group:hover .hover-grow {
+  transform: scale(var(--lift-art));
 }
 
 button:not(:disabled):hover,
@@ -159,6 +171,7 @@ button:not(:disabled):active,
 html[data-motion='reduced'] {
   --lift: 1;
   --press: 1;
+  --lift-art: 1;
 }
 html[data-motion='reduced'] *,
 html[data-motion='reduced'] *::before,

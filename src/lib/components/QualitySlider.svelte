@@ -70,7 +70,6 @@
 		<!-- fill (tracks the knob exactly so the bar never drifts ahead of the dot) -->
 		<div
 			class="qs-fill absolute top-1/2 left-0 h-[3px] -translate-y-1/2 rounded-full bg-gradient-to-r from-accent-cyan to-accent-purple"
-			class:qs-dragging={dragging}
 			style="width: {knobPct}%"
 		></div>
 		<!-- snap ticks -->
@@ -86,7 +85,6 @@
 		<div
 			class="qs-knob absolute top-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-md ring-1 ring-black/10"
 			class:scale-110={dragging}
-			class:qs-dragging={dragging}
 			style="left: {knobPct}%"
 		></div>
 	</div>
@@ -100,22 +98,10 @@
 </div>
 
 <style>
-	/* Snappy, low-overshoot easing (Apple-like); fill + knob share it so they
-	   always move together. */
-	.qs-fill,
-	.qs-knob {
-		transition:
-			left 0.16s cubic-bezier(0.3, 0, 0.2, 1),
-			width 0.16s cubic-bezier(0.3, 0, 0.2, 1),
-			transform 0.12s ease;
-	}
-	/* both follow the cursor in lock-step while dragging, then snap on release */
-	.qs-knob.qs-dragging,
-	.qs-fill.qs-dragging {
-		transition:
-			left 0.05s linear,
-			width 0.05s linear;
-	}
+	/* No transition on the fill or knob: they track the pointer exactly, and the
+	   snap between quality steps is instant. Easing them lagged behind the
+	   cursor and softened the step boundaries — the magnetic resistance in
+	   setFromX already supplies the feel, and it does so without the lag. */
 	.qs-track:focus-visible {
 		outline: none;
 	}

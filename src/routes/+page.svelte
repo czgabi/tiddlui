@@ -31,7 +31,7 @@
 	import { installShortcuts } from '$lib/keyboard';
 	import { showDownloadProgress } from '$lib/taskbar';
 	import { initDeepLinks } from '$lib/deeplink';
-	import { applyMotion, motionReduced } from '$lib/motion';
+	import { applyMotion, motionReduced, motionDuration } from '$lib/motion';
 	import { TidalUrlIsValid } from '$lib/url';
 
 	let searchBar = $state<{ focus: () => void } | null>(null);
@@ -212,8 +212,8 @@
 {#key ui.toastSeq}
 	{#if ui.toast}
 		<div
-			in:fly={{ y: 12, duration: 160 }}
-			out:fade={{ duration: 120 }}
+			in:fly={{ y: 12, duration: motionDuration(160) }}
+			out:fade={{ duration: motionDuration(120) }}
 			class="app-toast fixed right-4 bottom-4 z-50 max-w-sm rounded-xl border px-4 py-2.5 text-sm backdrop-blur-md {ui
 				.toast.kind === 'error'
 				? 'border-destructive/40 bg-destructive/15 text-destructive-foreground'

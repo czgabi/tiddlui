@@ -21,3 +21,10 @@ export function applyMotion(reduced: boolean): void {
 	if (typeof document === 'undefined') return;
 	document.documentElement.dataset.motion = reduced ? 'reduced' : 'full';
 }
+
+/** Duration for a Svelte transition. JS transitions run off the main thread's
+ *  clock, not CSS, so the stylesheet's reduced-motion rules can't reach them —
+ *  they have to be told to take no time at all. */
+export function motionDuration(ms: number): number {
+	return motionReduced() ? 0 : ms;
+}
