@@ -136,6 +136,20 @@ def do_search(api: Any, query: str) -> dict:
     return merged
 
 
+def fetch_track_stream(api: Any, track_id: Any, quality: str) -> Any:
+    """Get a track's stream descriptor, never from cache.
+
+    The manifest holds a signed, short-lived CDN URL. Replaying a cached one
+    yields a dead link, so this is the one call that must always hit the
+    network — for downloads as much as for previews.
+    """
+    try:
+        with api.client.session.cache_disabled():
+            return api.get_track_stream(track_id, quality)
+    except AttributeError:  # not a caching session (shouldn't happen)
+        return api.get_track_stream(track_id, quality)
+
+
 def get_stream_url(api: Any, track_id: Any, quality: str = "HIGH") -> dict:
     """Resolve a directly-playable stream URL for in-app preview (no download).
 
@@ -146,7 +160,7 @@ def get_stream_url(api: Any, track_id: Any, quality: str = "HIGH") -> dict:
     import json
 
     try:
-        stream = api.get_track_stream(track_id, quality)
+        stream = fetch_track_stream(api, track_id, quality)
         manifest = json.loads(base64.b64decode(stream.manifest))
         urls = manifest.get("urls") or []
         return {"track_id": track_id, "url": urls[0] if urls else None}

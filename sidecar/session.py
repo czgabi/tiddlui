@@ -10,10 +10,12 @@ from __future__ import annotations
 
 import json
 import time
+from datetime import timedelta
 from pathlib import Path
 from typing import Optional
 
 import keyring
+from requests_cache import DO_NOT_CACHE
 
 from tiddl.core.api import ApiError, TidalAPI
 from tiddl.core.api.client import TidalClient
@@ -24,9 +26,39 @@ from protocol import emit, log
 APP_DIR = Path.home() / ".tiddl-gui"
 CACHE_NAME = str(APP_DIR / "http_cache")
 
+# tiddl builds its requests-cache session with the library default of "never
+# expire", so the on-disk cache grows without bound and happily serves
+# months-old data. Metadata is worth caching briefly (expanding a playlist asks
+# for the same album repeatedly), but two things must never be cached: stream
+# URLs are signed and short-lived, so a cached one replays from a dead link, and
+# search should track the catalogue rather than a snapshot.
+CACHE_TTL = 6 * 3600          # seconds to keep ordinary metadata
+CACHE_MAX_AGE = timedelta(days=7)   # hard prune, whatever the TTL says
+_NEVER_CACHE = ("*playbackinfopostpaywall*", "*/search*")
+
 KEYRING_SERVICE = "Tiddlui"
 KEYRING_USER = "tidal-auth"
 LEGACY_AUTH_FILE = APP_DIR / "auth.json"  # migrated into the keychain on load
+
+
+def _tune_cache(session: object) -> None:
+    """Give the HTTP cache an expiry policy and prune what has gone stale."""
+    try:
+        settings = session.settings  # type: ignore[attr-defined]
+        settings.expire_after = CACHE_TTL
+        settings.cache_control = True  # prefer the server's own headers
+        settings.urls_expire_after = {p: DO_NOT_CACHE for p in _NEVER_CACHE}
+        cache = session.cache  # type: ignore[attr-defined]
+        cache.delete(expired=True, older_than=CACHE_MAX_AGE)
+        # Rows written before this policy existed carry "never expire", so the
+        # sweeps above can't touch them. Drop anything we now refuse to cache.
+        stale = [r.cache_key for r in cache.filter()
+                 if any(k in r.url for k in ("playbackinfopostpaywall", "/search"))]
+        if stale:
+            cache.delete(*stale)
+            log(f"dropped {len(stale)} cached entries that must not be reused")
+    except Exception as exc:  # noqa: BLE001 — caching is an optimisation, not a requirement
+        log(f"http cache tuning skipped: {exc}", level="warning")
 
 
 class Session:
@@ -110,6 +142,7 @@ class Session:
                 cache_name=CACHE_NAME,
                 on_token_expiry=self._refresh_if_needed,
             )
+            _tune_cache(client.session)
             self._api = TidalAPI(
                 client=client,
                 user_id=str(self._auth.get("user_id", "")),
@@ -165,6 +198,13 @@ class Session:
             try:
                 AuthAPI().logout_token(token)
             except Exception:  # noqa: BLE001 — best effort
+                pass
+        # The cache holds account-scoped data (favourites, playlists), so it
+        # goes with the session rather than outliving it.
+        if self._api is not None:
+            try:
+                self._api.client.session.cache.clear()
+            except Exception:  # noqa: BLE001
                 pass
         self._auth = {}
         self._api = None

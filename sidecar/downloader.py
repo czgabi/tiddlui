@@ -23,6 +23,7 @@ from tiddl.core.utils.ffmpeg import extract_flac
 from tiddl.core.utils.format import format_template
 from tiddl.core.utils.parse import parse_track_stream
 
+from resolver import fetch_track_stream
 from serialize import QUALITY_MAP, cover_url
 
 CHUNK = 1024 * 256
@@ -87,7 +88,7 @@ async def download_job(
         return None
 
     # 1. Stream descriptor + segment URLs (sync API → thread).
-    stream = await asyncio.to_thread(api.get_track_stream, track.id, track_quality)
+    stream = await asyncio.to_thread(fetch_track_stream, api, track.id, track_quality)
     urls, _ = await asyncio.to_thread(parse_track_stream, stream)
     should_extract = stream.audioQuality in LOSSLESS and stream.audioMode == "STEREO"
     label = quality_label(stream)
