@@ -1,5 +1,44 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- Download progress shows on the taskbar icon.
+- `tiddlui://` links open in the running app, and only one copy runs at a time.
+- Search your whole library from the Library window, grouped by kind.
+- Sort the library by recently added (recently followed for artists), title or
+  artist.
+- Playlist folders are browsable — Tidal lets you file playlists into folders
+  and the flat favourites list hid that entirely.
+- An Animations setting, forced off when your system asks for reduced motion.
+
+### Changed
+- Albums and playlists start downloading far sooner: the metadata each track
+  needs is fetched in parallel rather than one album at a time (1784ms -> 275ms
+  on a 25-track playlist).
+- Album art is fetched once per album instead of once per track.
+- The waveform is sharper (400 points, peak rather than average) and much
+  cheaper to compute (137ms -> 17ms), and it draws itself in instead of popping
+  into place. A placeholder shows while it is still decoding.
+- Play sits at the far left of a track row and Download at the far right, so
+  they can't be hit by accident.
+- The quality slider tracks the pointer exactly instead of easing behind it.
+- The library list keeps a fixed size, and fetches more as you reach the bottom
+  rather than making you click.
+
+### Fixed
+- Stream URLs were cached permanently. They are signed and short-lived, so
+  previewing or downloading a track fetched weeks earlier used a dead link.
+- The HTTP cache never expired and was never pruned — 15 MB of responses, the
+  oldest three months old, and an edited playlist kept returning its old
+  contents. Metadata now expires after six hours and signing out clears it.
+- Playlist cover art opened an empty lightbox: Tidal serves playlist images up
+  to 1080, not the 1280 used for albums.
+- Hovering a library row added a horizontal scrollbar and clipped the row.
+- Turning animations off left several things still moving.
+- Analysing a downloaded track's waveform decoded the whole file at full rate,
+  using roughly 127 MB for a six-minute track and far more for Hi-Res.
+
 ## 1.5.0
 
 ### Added
