@@ -1,13 +1,14 @@
 <script lang="ts">
-	// Text that changes in place — a quality label, a status word — crossfades
-	// through a blur instead of snapping to the new value. The two states are
-	// stacked so the surrounding layout never jumps mid-swap.
-	import { fade, blur } from 'svelte/transition';
+	// Text that changes in place — a quality label, a status word — blurs from
+	// one value to the next. The two states overlap deliberately: waiting for the
+	// old one to leave before the new one arrives reads as a flicker, not a morph.
+	// The states are stacked so surrounding layout never jumps mid-swap.
+	import { blur } from 'svelte/transition';
 	import { motionReduced } from '$lib/motion';
 
 	let {
 		value,
-		duration = 220,
+		duration = 130,
 		class: klass = ''
 	}: { value: string | number; duration?: number; class?: string } = $props();
 </script>
@@ -19,8 +20,8 @@
 		{#key value}
 			<span
 				class="morph-layer"
-				in:blur={{ amount: 4, duration, delay: duration * 0.35 }}
-				out:fade={{ duration: duration * 0.4 }}
+				in:blur={{ amount: 3, duration }}
+				out:blur={{ amount: 3, duration: duration * 0.6 }}
 			>
 				{value}
 			</span>

@@ -188,16 +188,28 @@
 							<div class="mt-2 min-h-0 flex-1 overflow-y-auto pr-1">
 							{#if downloads.tracklist.length === 0}<p class="text-xs text-muted-foreground">Loading tracks…</p>{/if}
 							{#each downloads.tracklist as t, i (t.id)}
-								<div class="group relative flex items-center gap-3 rounded-md pr-14 hover:bg-foreground/10">
-									<button onclick={() => pickTrack(t)} class="flex min-w-0 flex-1 items-center gap-3 px-2 py-1.5 text-left">
-										<span class="w-5 shrink-0 text-right text-xs text-muted-foreground">{i + 1}</span>
+								<div class="group relative flex items-center gap-2 rounded-md pr-10 hover:bg-foreground/10">
+									<!-- The number turns into Play on hover, putting it as far from the
+									     download button as the row allows. -->
+									<div class="relative ml-1.5 size-6 shrink-0">
+										<span class="grid size-full place-items-center text-xs text-muted-foreground transition-opacity group-hover:opacity-0">{i + 1}</span>
+										<button
+											title="Preview"
+											aria-label="Preview"
+											onclick={() => previewTrack(t)}
+											class="absolute inset-0 grid place-items-center rounded text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-accent-cyan"
+										><Play class="size-4" /></button>
+									</div>
+									<button onclick={() => pickTrack(t)} class="flex min-w-0 flex-1 items-center gap-3 py-1.5 text-left">
 										<div class="min-w-0 flex-1"><div class="truncate text-sm text-foreground">{t.title}</div><div class="truncate text-xs text-muted-foreground">{t.artist}</div></div>
 										<span class="shrink-0 text-xs text-muted-foreground">{formatDuration(t.duration)}</span>
 									</button>
-									<div class="absolute right-1.5 flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
-											<button title="Preview" aria-label="Preview" onclick={() => previewTrack(t)} class="rounded p-1 text-muted-foreground hover:text-accent-cyan"><Play class="size-4" /></button>
-											<button title="Download this track" aria-label="Download" onclick={() => startDownload(tidalUrl('track', t.id), { resource: t })} class="rounded p-1 text-muted-foreground hover:text-accent-cyan"><Download class="size-4" /></button>
-										</div>
+									<button
+										title="Download this track"
+										aria-label="Download"
+										onclick={() => startDownload(tidalUrl('track', t.id), { resource: t })}
+										class="absolute right-1.5 rounded p-1 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-accent-cyan"
+									><Download class="size-4" /></button>
 								</div>
 							{/each}
 						</div>
@@ -218,16 +230,28 @@
 									</div>
 									<div class="shrink-0">
 										{#each resource.top_tracks as t, i (t.id)}
-											<div class="group relative flex items-center gap-3 rounded-md pr-14 hover:bg-foreground/10">
-												<button onclick={() => pickTrack(t)} class="flex min-w-0 flex-1 items-center gap-3 px-2 py-1.5 text-left">
-													<span class="w-5 shrink-0 text-right text-xs text-muted-foreground">{i + 1}</span>
+											<div class="group relative flex items-center gap-2 rounded-md pr-10 hover:bg-foreground/10">
+												<!-- The number turns into Play on hover, putting it as far from the
+												     download button as the row allows. -->
+												<div class="relative ml-1.5 size-6 shrink-0">
+													<span class="grid size-full place-items-center text-xs text-muted-foreground transition-opacity group-hover:opacity-0">{i + 1}</span>
+													<button
+														title="Preview"
+														aria-label="Preview"
+														onclick={() => previewTrack(t)}
+														class="absolute inset-0 grid place-items-center rounded text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-accent-cyan"
+													><Play class="size-4" /></button>
+												</div>
+												<button onclick={() => pickTrack(t)} class="flex min-w-0 flex-1 items-center gap-3 py-1.5 text-left">
 													<div class="min-w-0 flex-1"><div class="truncate text-sm text-foreground">{t.title}</div><div class="truncate text-xs text-muted-foreground">{t.artist}</div></div>
 													<span class="shrink-0 text-xs text-muted-foreground">{formatDuration(t.duration)}</span>
 												</button>
-												<div class="absolute right-1.5 flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
-											<button title="Preview" aria-label="Preview" onclick={() => previewTrack(t)} class="rounded p-1 text-muted-foreground hover:text-accent-cyan"><Play class="size-4" /></button>
-											<button title="Download this track" aria-label="Download" onclick={() => startDownload(tidalUrl('track', t.id), { resource: t })} class="rounded p-1 text-muted-foreground hover:text-accent-cyan"><Download class="size-4" /></button>
-										</div>
+												<button
+													title="Download this track"
+													aria-label="Download"
+													onclick={() => startDownload(tidalUrl('track', t.id), { resource: t })}
+													class="absolute right-1.5 rounded p-1 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-accent-cyan"
+												><Download class="size-4" /></button>
 											</div>
 										{/each}
 									</div>

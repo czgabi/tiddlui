@@ -24,6 +24,7 @@ from resolver import (
     do_search,
     expand_jobs,
     favorites,
+    favorites_all,
     get_stream_url,
     parse_resource,
     resolve_summary,
@@ -94,6 +95,8 @@ class Engine:
                 await self._search(cmd)
             elif name == "favorites":
                 await self._favorites(cmd)
+            elif name == "favorites_all":
+                await self._favorites_all(cmd)
             elif name == "stream":
                 await self._stream(cmd)
             elif name == "resolve":
@@ -133,6 +136,10 @@ class Engine:
             favorites, self.session.api(), cmd.get("kind", "tracks"), cmd.get("offset", 0)
         )
         emit("favorites", request_id=cmd.get("request_id"), **result)
+
+    async def _favorites_all(self, cmd: dict) -> None:
+        result = await asyncio.to_thread(favorites_all, self.session.api())
+        emit("favorites_all", request_id=cmd.get("request_id"), **result)
 
     async def _stream(self, cmd: dict) -> None:
         request_id = cmd.get("request_id")

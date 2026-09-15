@@ -434,6 +434,43 @@ def favorites(api: Any, kind: str, offset: int = 0, limit: int = 50) -> dict:
     }
 
 
+FAV_ALL_KINDS = ("tracks", "albums", "artists", "playlists")
+FAV_PAGE = 100      # favourites endpoint caps out around here
+FAV_MAX = 2000      # stop runaway paging on a pathological library
+FAV_WORKERS = 4     # parallel pages within one kind
+
+
+def _all_of_kind(api: Any, kind: str) -> list:
+    """Every favourite of one kind.
+
+    The first page reports the total, so the remaining pages are known up front
+    and fetched together rather than one after another — which matters for the
+    tracks list, easily the largest of the four.
+    """
+    first = favorites(api, kind, 0, FAV_PAGE)
+    items = list(first.get("items") or [])
+    total = min(first.get("total") or len(items), FAV_MAX)
+    offsets = list(range(FAV_PAGE, total, FAV_PAGE))
+    if not offsets:
+        return items
+    with ThreadPoolExecutor(max_workers=min(len(offsets), FAV_WORKERS)) as pool:
+        for page in pool.map(lambda o: favorites(api, kind, o, FAV_PAGE), offsets):
+            items.extend(page.get("items") or [])
+    return items
+
+
+def favorites_all(api: Any) -> dict:
+    """The whole library, all four kinds at once.
+
+    Searching the library client-side needs all of it up front. The four kinds
+    are independent requests, so they go out together rather than one after
+    another.
+    """
+    with ThreadPoolExecutor(max_workers=len(FAV_ALL_KINDS)) as pool:
+        lists = list(pool.map(lambda k: _all_of_kind(api, k), FAV_ALL_KINDS))
+    return dict(zip(FAV_ALL_KINDS, lists))
+
+
 def track_listing(api: Any, text: str, limit: int = 60) -> list[dict]:
     """Serialized track list for an album/playlist/mix (for the metadata panel)."""
     rtype, rid = parse_resource(text)

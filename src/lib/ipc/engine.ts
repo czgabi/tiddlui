@@ -63,6 +63,9 @@ function route(ev: EngineEvent) {
 		case 'favorites':
 			library.receive(ev);
 			break;
+		case 'favorites_all':
+			library.receiveAll(ev);
+			break;
 		case 'stream_url':
 			onStreamUrl(ev);
 			break;

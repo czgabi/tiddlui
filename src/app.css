@@ -122,8 +122,21 @@ label[for],
 summary,
 .group {
   transition-property: color, background-color, border-color, opacity, box-shadow, transform;
-  transition-duration: 200ms;
+  transition-duration: 110ms;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Every control lifts a little under the pointer and settles when pressed.
+   Deliberately small — at this size it reads as responsiveness rather than
+   movement, which is what stops a UI full of hover effects feeling busy. */
+button:not(:disabled):hover,
+[role='button']:not([aria-disabled='true']):hover {
+  transform: scale(1.02);
+}
+button:not(:disabled):active,
+[role='button']:not([aria-disabled='true']):active {
+  transform: scale(0.985);
+  transition-duration: 60ms;
 }
 
 /* Animations setting. `data-motion` is written on <html> at runtime and already
