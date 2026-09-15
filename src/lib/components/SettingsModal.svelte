@@ -14,6 +14,7 @@
 	import { TEMPLATE_PRESETS, previewTemplate } from '$lib/templates';
 	import { THEMES } from '$lib/themes';
 	import { APP_NAME, APP_VERSION, APP_AUTHOR, APP_TAGLINE } from '$lib/about';
+	import MorphText from '$lib/components/MorphText.svelte';
 
 	let { open = $bindable(false) }: { open?: boolean } = $props();
 
@@ -77,7 +78,7 @@
 			<div class="flex flex-col gap-2">
 				<Label class="text-xs tracking-wide text-muted-foreground uppercase">Filename template</Label>
 				<Select.Root type="single" value={selectValue} onValueChange={onPreset}>
-					<Select.Trigger class="w-full">{selectLabel}</Select.Trigger>
+					<Select.Trigger class="w-full"><MorphText value={selectLabel} /></Select.Trigger>
 					<Select.Content>
 						{#each TEMPLATE_PRESETS as p (p.value)}
 							<Select.Item value={p.value} label={p.label}>{p.label}</Select.Item>
@@ -140,6 +141,25 @@
 				<Switch id="muteDefault" bind:checked={settings.mute_by_default} onCheckedChange={() => settings.save()} />
 			</div>
 
+			<!-- Animations -->
+			<div class="flex items-center justify-between gap-4">
+				<div>
+					<Label for="motion" class="text-sm">Animations</Label>
+					<p class="text-xs text-muted-foreground">
+						Waveform reveals, morphing labels and hover effects. Turned off automatically if
+						your system asks for reduced motion.
+					</p>
+				</div>
+				<Switch
+					id="motion"
+					checked={!settings.reduce_motion}
+					onCheckedChange={(v) => {
+						settings.reduce_motion = !v;
+						settings.save();
+					}}
+				/>
+			</div>
+
 			<!-- Simultaneous downloads -->
 			<div class="flex flex-col gap-2">
 				<Label class="text-xs tracking-wide text-muted-foreground uppercase">Simultaneous downloads</Label>
@@ -156,9 +176,11 @@
 					}}
 				>
 					<Select.Trigger class="w-full">
-						{settings.download_concurrency === 1
-							? 'One at a time'
-							: `${settings.download_concurrency} at a time`}
+						<MorphText
+							value={settings.download_concurrency === 1
+								? 'One at a time'
+								: `${settings.download_concurrency} at a time`}
+						/>
 					</Select.Trigger>
 					<Select.Content>
 						{#each [1, 2, 3, 4, 5] as n (n)}
@@ -181,7 +203,7 @@
 									<span class="size-3" style="background:{c}"></span>
 								{/each}
 							</span>
-							{currentTheme.label}
+							<MorphText value={currentTheme.label} />
 						</span>
 					</Select.Trigger>
 					<Select.Content>

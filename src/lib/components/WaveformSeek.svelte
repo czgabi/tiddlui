@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { player } from '$lib/stores/player.svelte';
+	import { motionReduced } from '$lib/motion';
 
 	const W = 1000;
 	const H = 100;
@@ -20,7 +21,7 @@
 
 	$effect(() => {
 		if (!player.analysis) return;
-		if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+		if (motionReduced()) {
 			reveal = 1;
 			return;
 		}
@@ -28,12 +29,25 @@
 		revealFrom = performance.now();
 	});
 
-	// Smooth curve (quadratic through midpoints) → no sharp edges.
-	const paths = $derived.by(() => {
-		const a = player.analysis;
-		if (!a || a.peaks.length < 2) return { line: '', fill: '' };
-		const n = a.peaks.length;
-		const pts = a.peaks.map((v, i) => [(i / (n - 1)) * W, BASE - v * 90] as [number, number]);
+	// A deliberately calm stand-in shown while the real envelope is still being
+	// decoded. Fixed seed so it doesn't twitch between renders, and kept low and
+	// faint so it reads as a placeholder rather than as audio data.
+	const placeholder = (() => {
+		let seed = 1337;
+		const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+		const n = 96;
+		const vals = Array.from({ length: n }, (_, i) => {
+			const envelope = Math.sin((i / (n - 1)) * Math.PI); // fade in and out
+			return 0.18 + envelope * (0.22 + rnd() * 0.16);
+		});
+		return curve(vals);
+	})();
+
+	/** Build the line + fill path pair for a 0..1 series. */
+	function curve(values: number[]) {
+		if (values.length < 2) return { line: '', fill: '' };
+		const n = values.length;
+		const pts = values.map((v, i) => [(i / (n - 1)) * W, BASE - v * 90] as [number, number]);
 		let mid = '';
 		for (let i = 1; i < pts.length - 1; i++) {
 			const mx = (pts[i][0] + pts[i + 1][0]) / 2;
@@ -44,7 +58,12 @@
 		mid += ` L ${last[0].toFixed(1)} ${last[1].toFixed(1)}`;
 		const start = `${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
 		return { line: `M ${start}${mid}`, fill: `M 0 ${BASE} L ${start}${mid} L ${W} ${BASE} Z` };
-	});
+	}
+
+	// Smooth curve (quadratic through midpoints) → no sharp edges.
+	const paths = $derived.by(() =>
+		player.analysis ? curve(player.analysis.peaks) : { line: '', fill: '' }
+	);
 
 	onMount(() => {
 		let raf = 0;
@@ -120,18 +139,47 @@
 			</g>
 		</svg>
 	{:else}
-		<!-- streamed preview (no local file to analyze): plain seek bar -->
-		<div class="flex h-full items-center">
-			<div class="relative h-1.5 w-full rounded-full bg-foreground/15">
-				<div
-					class="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-accent-cyan to-accent-purple"
-					style="width: {prog * 100}%"
-				></div>
-				<div
-					class="absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow ring-1 ring-black/10"
-					style="left: {prog * 100}%"
-				></div>
-			</div>
-		</div>
+		<!-- The envelope only exists once the whole track is decoded, so until then
+		     this shows a calm placeholder that the real waveform then draws over,
+		     rather than a bare progress bar. -->
+		<svg viewBox="0 0 {W} {H}" preserveAspectRatio="none" class="h-full w-full">
+			<defs>
+				<clipPath id="wf-pending"><rect x="0" y="0" width={prog * W} height={H} /></clipPath>
+				<linearGradient id="wf-shimmer" x1="0" y1="0" x2="1" y2="0">
+					<stop offset="0%" stop-color="var(--accent-cyan)" stop-opacity="0" />
+					<stop offset="50%" stop-color="var(--accent-cyan)" stop-opacity="0.35" />
+					<stop offset="100%" stop-color="var(--accent-cyan)" stop-opacity="0" />
+				</linearGradient>
+			</defs>
+
+			<path d={placeholder.line} fill="none" stroke="var(--muted-foreground)"
+				stroke-opacity="0.28" stroke-width="1.2" stroke-linejoin="round"
+				vector-effect="non-scaling-stroke" />
+			<!-- what has already played still reads, so seeking works while waiting -->
+			<path d={placeholder.line} fill="none" stroke="var(--accent-cyan)" stroke-opacity="0.5"
+				stroke-width="1.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"
+				clip-path="url(#wf-pending)" />
+			{#if !motionReduced()}
+				<rect class="shimmer" x="0" y="0" width="260" height={H} fill="url(#wf-shimmer)" />
+			{/if}
+			<line x1={prog * W} y1="0" x2={prog * W} y2={H} stroke="var(--accent-pink)"
+				stroke-width="1.6" vector-effect="non-scaling-stroke" />
+		</svg>
 	{/if}
 </div>
+
+<style>
+	/* Sweeps across while the real envelope is still decoding. The rect is only
+	   rendered when motion is enabled, so there is nothing to override here. */
+	.shimmer {
+		animation: wf-sweep 1.7s ease-in-out infinite;
+	}
+	@keyframes wf-sweep {
+		from {
+			transform: translateX(-280px);
+		}
+		to {
+			transform: translateX(1000px);
+		}
+	}
+</style>

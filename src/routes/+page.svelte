@@ -31,6 +31,7 @@
 	import { installShortcuts } from '$lib/keyboard';
 	import { showDownloadProgress } from '$lib/taskbar';
 	import { initDeepLinks } from '$lib/deeplink';
+	import { applyMotion, motionReduced } from '$lib/motion';
 	import { TidalUrlIsValid } from '$lib/url';
 
 	let searchBar = $state<{ focus: () => void } | null>(null);
@@ -53,6 +54,10 @@
 			settings.save();
 		}
 	}
+
+	// Expose the motion preference to CSS so stylesheet-only animations can
+	// opt out alongside the scripted ones.
+	$effect(() => applyMotion(motionReduced()));
 
 	// Mirror download progress onto the taskbar icon. Queued-but-not-started
 	// shows as indeterminate; averaging only the running items keeps a long

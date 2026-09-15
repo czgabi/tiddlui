@@ -126,6 +126,18 @@ summary,
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Animations setting. `data-motion` is written on <html> at runtime and already
+   accounts for the OS reduced-motion preference, so this one rule covers both
+   and reaches CSS-only animations the components can't gate themselves. */
+html[data-motion='reduced'] *,
+html[data-motion='reduced'] *::before,
+html[data-motion='reduced'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
 html,
 body {
   height: 100%;

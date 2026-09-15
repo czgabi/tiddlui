@@ -109,6 +109,8 @@ export interface AppSettings {
 	mute_by_default: boolean;
 	/** Tracks downloaded at once within one album/playlist (1-5). */
 	download_concurrency: number;
+	/** Skip decorative motion — reveals, morphing text, shimmer. */
+	reduce_motion: boolean;
 }
 
 export interface FfmpegStatus {
