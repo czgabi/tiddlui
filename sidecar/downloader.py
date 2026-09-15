@@ -10,6 +10,7 @@ import asyncio
 import shutil
 import subprocess
 import time
+from functools import lru_cache
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import Any, Awaitable, Callable, Optional
@@ -207,7 +208,16 @@ def _to_mp3(src: Path) -> Path:
     return dest
 
 
+@lru_cache(maxsize=4)
 def _fetch_cover(uid: Any) -> bytes | None:
+    """Album art for tagging, cached by cover id.
+
+    Every track on an album carries the same cover, so without this a 40-track
+    album would re-download the identical ~280 KB image 40 times. The cache is
+    deliberately tiny: a download group only ever works through one or two
+    albums at a time. Concurrent workers can still race on a cold entry and
+    fetch it twice, which costs one extra request and is not worth a lock.
+    """
     url = cover_url(uid, size=1280)
     if not url:
         return None

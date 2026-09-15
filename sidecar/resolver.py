@@ -28,6 +28,11 @@ _PAGE = 100
 SEARCH_LIMIT = 20      # candidates pulled per query (Tidal default is small)
 MAX_VARIANTS = 5       # cap concurrent queries per search
 MERGE_CAP = 24         # max items kept per category after merge (client ranks + slices)
+
+# Waveform envelope. 1 kHz is plenty for an amplitude picture and keeps the
+# bucket loop ~8x cheaper than 4 kHz; ffmpeg costs the same either way.
+PEAK_RATE = 1000
+PEAK_FRAMES = 400
 _CATEGORIES = ("tracks", "albums", "playlists", "artists")
 
 
@@ -148,12 +153,18 @@ def get_stream_url(api: Any, track_id: Any, quality: str = "HIGH") -> dict:
         return {"track_id": track_id, "url": None, "error": str(exc)}
 
 
-def compute_stream_peaks(url: str, frames: int = 150) -> Optional[dict]:
+def compute_stream_peaks(url: str, frames: int = PEAK_FRAMES) -> Optional[dict]:
     """Decode a stream URL to coarse mono PCM via ffmpeg and build a 0..1
-    amplitude envelope — same shape the frontend computes for local files, so
-    streamed previews get the real waveform instead of a flat bar."""
+    amplitude envelope — the same shape the frontend computes for local files,
+    so a streamed preview gets the real waveform instead of a flat bar.
+
+    Uses peak (max absolute sample) per bucket rather than RMS: it draws a
+    sharper, more detailed line, and max()/min() over an array slice is about
+    twice as fast as a Python-level RMS loop. Decoding at PEAK_RATE rather than
+    full rate is what actually keeps that loop cheap — ffmpeg costs the same
+    either way, since the work is decoding AAC, not resampling.
+    """
     import array
-    import math
     import os
     import shutil
     import subprocess
@@ -179,7 +190,7 @@ def compute_stream_peaks(url: str, frames: int = 150) -> Optional[dict]:
             fh.write(resp.content)
         cmd = [
             ffmpeg, "-nostdin", "-y", "-hide_banner", "-loglevel", "error",
-            "-i", src_path, "-ac", "1", "-ar", "4000", "-f", "s16le", pcm_path,
+            "-i", src_path, "-ac", "1", "-ar", str(PEAK_RATE), "-f", "s16le", pcm_path,
         ]
         subprocess.run(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
                        stderr=subprocess.DEVNULL, timeout=60,
@@ -198,33 +209,28 @@ def compute_stream_peaks(url: str, frames: int = 150) -> Optional[dict]:
         return None
     samples = array.array("h")
     samples.frombytes(raw[: count * 2])
-    duration = count / 4000.0
+    duration = count / float(PEAK_RATE)
+
     step = max(1, count // frames)
     peaks: list[float] = []
-    peak_max = 1e-6
+    loudest = 1e-6
     for f in range(frames):
         chunk = samples[f * step : f * step + step]
         if not chunk:
             peaks.append(0.0)
             continue
-        acc = 0.0
-        for x in chunk:
-            v = x / 32768.0
-            acc += v * v
-        rms = math.sqrt(acc / len(chunk))
-        peaks.append(rms)
-        peak_max = max(peak_max, rms)
-    norm = [min(1.0, (p / peak_max) ** 0.8) for p in peaks]
-    smoothed = [
-        (
-            (norm[i - 1] if i > 0 else norm[i])
-            + norm[i] * 2
-            + (norm[i + 1] if i < len(norm) - 1 else norm[i])
-        )
-        / 4
-        for i in range(len(norm))
-    ]
-    return {"peaks": smoothed, "duration": duration}
+        amp = max(max(chunk), -min(chunk)) / 32768.0
+        peaks.append(amp)
+        if amp > loudest:
+            loudest = amp
+
+    # Normalise, with mild compression so a quiet track still reads. No
+    # smoothing pass — the seek bar already draws a smoothed curve, and
+    # flattening here just throws the extra detail away.
+    return {
+        "peaks": [min(1.0, (p / loudest) ** 0.85) for p in peaks],
+        "duration": duration,
+    }
 
 
 def resolve_summary(api: Any, text: str) -> dict:
