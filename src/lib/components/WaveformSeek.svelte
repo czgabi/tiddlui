@@ -11,6 +11,23 @@
 	let dragging = $state(false);
 	let dragFrac = $state<number | null>(null);
 
+	// A waveform arrives all at once (the engine can only emit it once the whole
+	// track is decoded), so it draws itself in left-to-right instead of popping
+	// into place. Purely cosmetic — the data is already complete.
+	const REVEAL_MS = 550;
+	let reveal = $state(1);
+	let revealFrom = 0;
+
+	$effect(() => {
+		if (!player.analysis) return;
+		if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+			reveal = 1;
+			return;
+		}
+		reveal = 0;
+		revealFrom = performance.now();
+	});
+
 	// Smooth curve (quadratic through midpoints) → no sharp edges.
 	const paths = $derived.by(() => {
 		const a = player.analysis;
@@ -35,6 +52,11 @@
 			if (!player.path) prog = 0;
 			else if (dragFrac !== null) prog = dragFrac; // follow cursor while scrubbing
 			else prog = Math.max(0, Math.min(1, player.progress));
+
+			if (reveal < 1) {
+				const t = Math.min(1, (performance.now() - revealFrom) / REVEAL_MS);
+				reveal = 1 - Math.pow(1 - t, 3); // ease-out: quick, then settles
+			}
 			raf = requestAnimationFrame(tick);
 		};
 		raf = requestAnimationFrame(tick);
@@ -78,6 +100,7 @@
 	{#if player.analysis}
 		<svg viewBox="0 0 {W} {H}" preserveAspectRatio="none" class="h-full w-full">
 			<defs>
+				<clipPath id="wf-reveal"><rect x="0" y="0" width={reveal * W} height={H} /></clipPath>
 				<clipPath id="wf-played"><rect x="0" y="0" width={prog * W} height={H} /></clipPath>
 				<linearGradient id="wf-fill" x1="0" y1="1" x2="0" y2="0">
 					<stop offset="0%" stop-color="var(--accent-cyan)" stop-opacity="0.10" />
@@ -85,13 +108,16 @@
 				</linearGradient>
 			</defs>
 
-			<path d={paths.fill} fill="url(#wf-fill)" clip-path="url(#wf-played)" />
-			<path d={paths.line} fill="none" stroke="var(--muted-foreground)" stroke-opacity="0.5"
-				stroke-width="1.2" stroke-linejoin="round" vector-effect="non-scaling-stroke" />
-			<path d={paths.line} fill="none" stroke="var(--accent-cyan)" stroke-width="1.7"
-				stroke-linejoin="round" vector-effect="non-scaling-stroke" clip-path="url(#wf-played)" />
-			<line x1={prog * W} y1="0" x2={prog * W} y2={H} stroke="var(--accent-pink)"
-				stroke-width="1.6" vector-effect="non-scaling-stroke" />
+			<!-- everything is clipped to the reveal so the waveform draws itself in -->
+			<g clip-path="url(#wf-reveal)">
+				<path d={paths.fill} fill="url(#wf-fill)" clip-path="url(#wf-played)" />
+				<path d={paths.line} fill="none" stroke="var(--muted-foreground)" stroke-opacity="0.5"
+					stroke-width="1.2" stroke-linejoin="round" vector-effect="non-scaling-stroke" />
+				<path d={paths.line} fill="none" stroke="var(--accent-cyan)" stroke-width="1.7"
+					stroke-linejoin="round" vector-effect="non-scaling-stroke" clip-path="url(#wf-played)" />
+				<line x1={prog * W} y1="0" x2={prog * W} y2={H} stroke="var(--accent-pink)"
+					stroke-width="1.6" vector-effect="non-scaling-stroke" />
+			</g>
 		</svg>
 	{:else}
 		<!-- streamed preview (no local file to analyze): plain seek bar -->
