@@ -29,6 +29,7 @@
 	import { initEngine } from '$lib/ipc/engine';
 	import { startDownload } from '$lib/queue';
 	import { installShortcuts } from '$lib/keyboard';
+	import { showDownloadProgress } from '$lib/taskbar';
 	import { TidalUrlIsValid } from '$lib/url';
 
 	let searchBar = $state<{ focus: () => void } | null>(null);
@@ -51,6 +52,18 @@
 			settings.save();
 		}
 	}
+
+	// Mirror download progress onto the taskbar icon. Queued-but-not-started
+	// shows as indeterminate; averaging only the running items keeps a long
+	// queue from pinning the bar near zero.
+	$effect(() => {
+		const running = downloads.downloading;
+		const queued = downloads.queued;
+		const avg = running.length
+			? running.reduce((sum, i) => sum + (i.progress ?? 0), 0) / running.length
+			: 0;
+		showDownloadProgress(running.length, queued.length, avg);
+	});
 
 	// Force sign-in whenever signed out — but only after the engine has reported
 	// the initial auth state, so we never flash the login on a valid session.
