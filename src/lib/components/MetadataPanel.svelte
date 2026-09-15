@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Disc3, Music2, ListMusic, User, Play, Pause, Volume2, VolumeX, Download, BadgeCheck, Loader2, Copy, X, Maximize2, ArrowLeft } from '@lucide/svelte';
+	import { Disc3, Music2, ListMusic, User, Folder, Play, Pause, Volume2, VolumeX, Download, BadgeCheck, Loader2, Copy, X, Maximize2, ArrowLeft } from '@lucide/svelte';
 	import { fade, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import { save } from '@tauri-apps/plugin-dialog';
@@ -20,7 +20,7 @@
 	const cover = $derived(resource?.cover_url ?? null);
 	const isCollection = $derived(resource?.kind === 'album' || resource?.kind === 'playlist');
 	const isArtist = $derived(resource?.kind === 'artist');
-	const iconFor = { track: Music2, album: Disc3, playlist: ListMusic, artist: User };
+	const iconFor = { track: Music2, album: Disc3, playlist: ListMusic, artist: User, folder: Folder };
 
 	function back() {
 		const p = downloads.backTarget;
@@ -53,13 +53,17 @@
 		const head = [resource.artist, resource.title].filter(Boolean).join(' - ');
 		copyText(resource.album?.title ? `${head}, ${resource.album.title}` : head);
 	}
-	function hiRes(u: string | null): string {
-		return u ? u.replace('/320x320.', '/1280x1280.') : '';
+	// Tidal serves album and artist art up to 1280, but playlist art stops at
+	// 1080 — asking for 1280 there returns 403 and the lightbox opens empty.
+	function hiRes(u: string | null, kind?: string): string {
+		if (!u) return '';
+		const size = kind === 'playlist' ? '1080x1080' : '1280x1280';
+		return u.replace('/320x320.', `/${size}.`);
 	}
 	async function downloadCover() {
 		if (!cover) return;
 		const dest = await save({ defaultPath: 'cover.jpg', filters: [{ name: 'Image', extensions: ['jpg'] }] });
-		if (dest) engine.saveImage(hiRes(cover), dest);
+		if (dest) engine.saveImage(hiRes(cover, resource?.kind), dest);
 	}
 
 	const headline = $derived.by(() => {
@@ -221,7 +225,7 @@
 									</span>
 								{/if}
 								{#if resource?.bio}
-									<p class="shrink-0 text-xs leading-relaxed whitespace-pre-line text-muted-foreground">{resource.bio}</p>
+									<p class="mb-1 max-h-24 shrink-0 overflow-y-auto pr-1 text-xs leading-relaxed whitespace-pre-line text-muted-foreground">{resource.bio}</p>
 								{/if}
 								{#if resource?.top_tracks?.length}
 									<div class="flex items-center justify-between gap-2">
@@ -338,7 +342,7 @@
 <!-- cover lightbox -->
 {#if coverOpen && cover}
 	<div class="fixed inset-0 z-[100] grid place-items-center bg-black/85 p-10 backdrop-blur-sm" onclick={() => (coverOpen = false)} role="presentation" transition:fade={{ duration: 160 }}>
-		<img src={hiRes(cover)} alt="" class="max-h-[85vh] max-w-[90vw] rounded-2xl object-contain shadow-2xl ring-1 ring-white/10" onclick={(e) => e.stopPropagation()} role="presentation" transition:scale={{ start: 0.9, opacity: 0, duration: 220, easing: cubicOut }} />
+		<img src={hiRes(cover, resource?.kind)} onerror={(e) => ((e.currentTarget as HTMLImageElement).src = cover ?? '')} alt="" class="max-h-[85vh] max-w-[90vw] rounded-2xl object-contain shadow-2xl ring-1 ring-white/10" onclick={(e) => e.stopPropagation()} role="presentation" transition:scale={{ start: 0.9, opacity: 0, duration: 220, easing: cubicOut }} />
 		<button onclick={() => (coverOpen = false)} aria-label="Close" class="absolute top-5 right-5 rounded-full bg-black/40 p-2 text-white hover:bg-black/60"><X class="size-5" /></button>
 		<button onclick={(e) => { e.stopPropagation(); downloadCover(); }} class="absolute bottom-6 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm text-white backdrop-blur hover:bg-white/25"><Download class="size-4" /> Download image</button>
 	</div>

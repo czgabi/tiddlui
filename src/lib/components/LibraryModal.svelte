@@ -1,11 +1,10 @@
 <script lang="ts">
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Select from '$lib/components/ui/select';
-	import { Button } from '$lib/components/ui/button';
-	import { Loader2, Music2, Disc3, ListMusic, User, Search, X } from '@lucide/svelte';
+	import { Loader2, Music2, Disc3, ListMusic, User, Search, X, Folder, ChevronLeft } from '@lucide/svelte';
 
 	import MorphText from '$lib/components/MorphText.svelte';
-	import { library, FAV_KINDS, SORTS, type FavKind, type SortId } from '$lib/stores/library.svelte';
+	import { library, FAV_KINDS, sortsFor, type FavKind, type SortId } from '$lib/stores/library.svelte';
 	import { downloads } from '$lib/stores/download.svelte';
 	import { search } from '$lib/stores/search.svelte';
 	import { engine } from '$lib/ipc/commands';
@@ -13,11 +12,15 @@
 	import { tidalUrl } from '$lib/url';
 	import type { Resource } from '$lib/types';
 
-	const placeholder = { track: Music2, album: Disc3, playlist: ListMusic, artist: User };
+	const placeholder = { track: Music2, album: Disc3, playlist: ListMusic, artist: User, folder: Folder };
 
 	let input = $state<HTMLInputElement | null>(null);
 
 	function pick(item: Resource) {
+		if (item.kind === 'folder') {
+			library.openFolder(item);
+			return;
+		}
 		downloads.url = tidalUrl(item.kind, item.id);
 		downloads.select(item);
 		// Artists need a follow-up fetch for bio/top tracks/discography.
@@ -26,6 +29,10 @@
 	}
 
 	function subtitle(item: Resource): string {
+		if (item.kind === 'folder') {
+			const n = item.number_of_tracks ?? 0;
+			return `${n} playlist${n === 1 ? '' : 's'}`;
+		}
 		if (item.kind === 'track' || item.kind === 'album') return item.artist ?? '';
 		if (item.kind === 'playlist') return `${item.number_of_tracks ?? ''} tracks`.trim();
 		return 'Artist';
@@ -37,7 +44,31 @@
 		setTimeout(() => input?.focus(), 60);
 	}
 
-	const sortLabel = $derived(SORTS.find((s) => s.id === library.sort)?.label ?? 'Recently added');
+	const sorts = $derived(sortsFor(library.kind));
+
+	/** Leaving an empty field puts the tabs back; a field with a query stays so
+	 *  the results remain reachable, and only the X dismisses it. */
+	function onBlur() {
+		if (!library.query.trim()) library.endSearch();
+	}
+
+	// Fetch the next page as the end of the list comes into view, rather than
+	// making the user click for it. rootMargin starts the request slightly early
+	// so the list rarely stalls at the bottom.
+	let sentinel = $state<HTMLDivElement | null>(null);
+	$effect(() => {
+		// Re-observing after every page matters: if the sentinel is still on
+		// screen once a page lands, the observer won't fire again by itself and
+		// loading would stall halfway down.
+		library.items.length;
+		if (!sentinel || library.searching) return;
+		const io = new IntersectionObserver(
+			(entries) => entries[0].isIntersecting && library.loadMore(),
+			{ root: sentinel.closest('[data-library-list]'), rootMargin: '240px' }
+		);
+		io.observe(sentinel);
+		return () => io.disconnect();
+	});
 </script>
 
 <Dialog.Root bind:open={library.open}>
@@ -82,10 +113,10 @@
 						onValueChange={(v) => (library.sort = v as SortId)}
 					>
 						<Select.Trigger class="h-7 rounded-full px-3 text-xs">
-							<MorphText value={sortLabel} />
+							<MorphText value={library.sortLabel} />
 						</Select.Trigger>
 						<Select.Content>
-							{#each SORTS as s (s.id)}
+							{#each sorts as s (s.id)}
 								<Select.Item value={s.id} label={s.label}>{s.label}</Select.Item>
 							{/each}
 						</Select.Content>
@@ -106,6 +137,7 @@
 					tabindex={library.searching ? 0 : -1}
 					aria-hidden={!library.searching}
 					onkeydown={(e) => e.key === 'Escape' && library.endSearch()}
+					onblur={onBlur}
 					placeholder="Search your library…"
 					class="min-w-0 flex-1 bg-transparent px-2.5 text-sm outline-none placeholder:text-muted-foreground"
 				/>
@@ -121,7 +153,19 @@
 		</div>
 
 		<!-- Fixed height: switching tabs or searching must not resize the dialog. -->
-		<div class="flex h-[26rem] flex-col overflow-y-auto pr-1">
+		{#if !library.searching && library.folderTrail.length}
+			<button
+				onclick={() => library.leaveFolder()}
+				class="-mb-1 flex w-fit items-center gap-1 rounded-md px-1.5 py-1 text-xs text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
+			>
+				<ChevronLeft class="size-3.5" /> {library.folderName}
+			</button>
+		{/if}
+
+		<!-- overflow-x-hidden: the hover lift is a transform, which counts toward
+		     scroll width and would otherwise add a sideways scrollbar. px-1 keeps
+		     the lifted row from being clipped against the edges. -->
+		<div data-library-list class="flex h-[26rem] flex-col overflow-x-hidden overflow-y-auto px-1 pr-1">
 			{#if library.searching}
 				{#if library.loadingAll}
 					<div class="flex flex-1 items-center justify-center gap-2 text-xs text-muted-foreground">
@@ -190,10 +234,9 @@
 					</div>
 				{:else if library.items.length === 0}
 					<div class="grid flex-1 place-items-center text-sm text-muted-foreground">Nothing saved here yet.</div>
-				{:else if library.canLoadMore}
-					<Button variant="ghost" size="sm" class="mt-1 self-center" onclick={() => library.loadMore()}>
-						Load more ({library.items.length} of {library.total})
-					</Button>
+				{/if}
+				{#if library.canLoadMore}
+					<div bind:this={sentinel} class="h-8 shrink-0"></div>
 				{/if}
 			{/if}
 		</div>

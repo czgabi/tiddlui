@@ -18,7 +18,9 @@ export const QUALITY_DESC: Record<Quality, string> = {
 	MAX: 'Up to 24-bit Hi-Res'
 };
 
-export type ResourceKind = 'track' | 'album' | 'playlist' | 'artist';
+// 'folder' only ever appears while browsing the library's playlist tree —
+// it is never downloadable, so nothing downstream resolves it.
+export type ResourceKind = 'track' | 'album' | 'playlist' | 'artist' | 'folder';
 
 export interface Resource {
 	kind: ResourceKind;

@@ -459,6 +459,45 @@ def _all_of_kind(api: Any, kind: str) -> list:
     return items
 
 
+# Playlist folders live on a v2 endpoint that tiddl's client doesn't wrap.
+_V2_URL = "https://api.tidal.com/v2"
+
+
+def playlist_folders(api: Any, folder_id: str = "root", limit: int = 50) -> dict:
+    """One level of the user's playlist tree: folders and loose playlists.
+
+    Tidal lets people file playlists into folders, and the flat favourites list
+    hides that structure entirely. Entries come back tagged FOLDER or PLAYLIST;
+    both are mapped onto the resource shape the UI already renders.
+    """
+    resp = api.client.session.get(
+        f"{_V2_URL}/my-collection/playlists/folders",
+        params={"countryCode": api.country_code, "folderId": folder_id, "limit": limit},
+    )
+    resp.raise_for_status()
+    data = resp.json()
+
+    items: list[dict] = []
+    for entry in data.get("items") or []:
+        d = entry.get("data") or {}
+        if entry.get("itemType") == "FOLDER":
+            items.append({
+                "kind": "folder",
+                "id": d.get("id"),
+                "title": d.get("name"),
+                "artist": "Folder",
+                "number_of_tracks": d.get("totalNumberOfItems"),
+                "cover_url": None,
+            })
+        else:
+            items.append(_raw_playlist_to_dict(d))
+    return {
+        "folder_id": folder_id,
+        "items": items,
+        "total": data.get("totalNumberOfItems", len(items)),
+    }
+
+
 def favorites_all(api: Any) -> dict:
     """The whole library, all four kinds at once.
 

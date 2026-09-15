@@ -25,6 +25,14 @@ export const SORTS: { id: SortId; label: string }[] = [
 	{ id: 'artist', label: 'Artist' }
 ];
 
+/** You follow artists rather than adding them, and they have no separate
+ *  artist field to sort on. */
+export function sortsFor(kind: FavKind): { id: SortId; label: string }[] {
+	return SORTS.filter((s) => !(kind === 'artists' && s.id === 'artist')).map((s) =>
+		s.id === 'added' && kind === 'artists' ? { ...s, label: 'Recently followed' } : s
+	);
+}
+
 /** Fold case and accents so "Bjork" finds "Björk". */
 function normalize(s: unknown): string {
 	return String(s ?? '')
@@ -70,6 +78,11 @@ class LibraryStore {
 	// monotonic id so stale paginated responses are ignored
 	requestId = $state(0);
 
+	// playlist folder tree: Tidal lets playlists be filed into folders, which the
+	// flat favourites list can't represent. Browsing Playlists walks that tree.
+	folderId = $state('root');
+	folderTrail = $state<{ id: string; title: string }[]>([]);
+
 	// whole-library search
 	searching = $state(false);
 	query = $state('');
@@ -77,7 +90,8 @@ class LibraryStore {
 	loadingAll = $state(false);
 
 	get canLoadMore(): boolean {
-		return this.items.length < this.total;
+		// A folder level arrives whole; only the flat favourite lists page.
+		return this.kind !== 'playlists' && this.items.length < this.total;
 	}
 
 	/** The browse list, in the chosen order. Sorting is client-side, so it only
@@ -121,21 +135,78 @@ class LibraryStore {
 		this.show(this.kind);
 	}
 
+	get sortLabel(): string {
+		return sortsFor(this.kind).find((s) => s.id === this.sort)?.label ?? 'Recently added';
+	}
+
 	/** Switch tab (or (re)load the current one) from the first page. */
 	show(kind: FavKind) {
 		this.kind = kind;
+		// 'artist' has no meaning on the artists tab; fall back rather than
+		// leaving the dropdown showing an option it no longer lists.
+		if (kind === 'artists' && this.sort === 'artist') this.sort = 'added';
+		if (kind !== 'playlists') {
+			this.folderId = 'root';
+			this.folderTrail = [];
+		}
 		this.items = [];
 		this.total = 0;
 		this.#load(0);
 	}
 
+	/** Called as the list nears its end. Guarded so a burst of scroll events
+	 *  can't fire several overlapping page requests. */
 	loadMore() {
-		if (!this.loading && this.canLoadMore) this.#load(this.items.length);
+		if (this.loading || !this.canLoadMore) return;
+		this.#load(this.items.length);
 	}
 
 	#load(offset: number) {
 		this.loading = true;
-		engine.favorites(this.kind, offset, ++this.requestId);
+		if (this.kind === 'playlists') {
+			// The folder endpoint returns one whole level, so it never pages.
+			engine.playlistFolders(this.folderId, ++this.requestId);
+		} else {
+			engine.favorites(this.kind, offset, ++this.requestId);
+		}
+	}
+
+	/** Walk into a folder, remembering the way back. */
+	openFolder(item: Resource) {
+		this.folderTrail = [...this.folderTrail, { id: this.folderId, title: item.title }];
+		this.folderId = String(item.id);
+		this.items = [];
+		this.total = 0;
+		this.#load(0);
+	}
+
+	/** Back out one level of the folder tree. */
+	leaveFolder() {
+		const prev = this.folderTrail.pop();
+		this.folderTrail = [...this.folderTrail];
+		this.folderId = prev?.id ?? 'root';
+		this.items = [];
+		this.total = 0;
+		this.#load(0);
+	}
+
+	get folderName(): string {
+		return this.folderTrail.length
+			? this.folderTrail[this.folderTrail.length - 1].title
+			: '';
+	}
+
+	/** Fed by the engine "playlist_folders" event. */
+	receiveFolder(ev: {
+		request_id?: number;
+		items?: Resource[];
+		total?: number;
+		[k: string]: unknown;
+	}) {
+		if (ev.request_id !== this.requestId) return;
+		this.items = ev.items ?? [];
+		this.total = ev.total ?? this.items.length;
+		this.loading = false;
 	}
 
 	/** Fed by the engine "favorites" event. */
@@ -185,6 +256,8 @@ class LibraryStore {
 		this.loading = false;
 		this.all = null;
 		this.loadingAll = false;
+		this.folderId = 'root';
+		this.folderTrail = [];
 		this.endSearch();
 	}
 }

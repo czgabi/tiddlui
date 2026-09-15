@@ -66,6 +66,9 @@ function route(ev: EngineEvent) {
 		case 'favorites_all':
 			library.receiveAll(ev);
 			break;
+		case 'playlist_folders':
+			library.receiveFolder(ev);
+			break;
 		case 'stream_url':
 			onStreamUrl(ev);
 			break;

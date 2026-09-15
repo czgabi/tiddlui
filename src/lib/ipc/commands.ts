@@ -28,6 +28,8 @@ export const engine = {
 	favorites: (kind: string, offset: number, requestId: number) =>
 		send({ cmd: 'favorites', kind, offset, request_id: requestId }),
 	favoritesAll: (requestId: number) => send({ cmd: 'favorites_all', request_id: requestId }),
+	playlistFolders: (folderId: string, requestId: number) =>
+		send({ cmd: 'playlist_folders', folder_id: folderId, request_id: requestId }),
 	stream: (trackId: string, requestId: number, peaks = true) =>
 		send({ cmd: 'stream', track_id: trackId, request_id: requestId, peaks }),
 	resolve: (url: string, requestId: number) =>

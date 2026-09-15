@@ -127,28 +127,51 @@ summary,
 }
 
 /* Every control lifts a little under the pointer and settles when pressed.
-   Deliberately small — at this size it reads as responsiveness rather than
-   movement, which is what stops a UI full of hover effects feeling busy. */
+   Both go through variables so turning motion off sets them to 1 — an identity
+   transform — instead of trying to null `transform` globally, which would break
+   every centred element that relies on translate. */
+:root {
+  --lift: 1.02;
+  --press: 0.985;
+}
+
 button:not(:disabled):hover,
 [role='button']:not([aria-disabled='true']):hover {
-  transform: scale(1.02);
+  transform: scale(var(--lift));
 }
 button:not(:disabled):active,
 [role='button']:not([aria-disabled='true']):active {
-  transform: scale(0.985);
+  transform: scale(var(--press));
   transition-duration: 60ms;
+}
+
+/* A dropdown shouldn't squash when clicked: it stays lifted for as long as it
+   is open, then settles once something is chosen or it is dismissed. */
+[data-slot='select-trigger']:not(:disabled):active,
+[data-slot='select-trigger'][data-state='open'],
+[data-slot='select-trigger'][data-state='open']:hover {
+  transform: scale(var(--lift));
 }
 
 /* Animations setting. `data-motion` is written on <html> at runtime and already
    accounts for the OS reduced-motion preference, so this one rule covers both
    and reaches CSS-only animations the components can't gate themselves. */
+html[data-motion='reduced'] {
+  --lift: 1;
+  --press: 1;
+}
 html[data-motion='reduced'] *,
 html[data-motion='reduced'] *::before,
 html[data-motion='reduced'] *::after {
-  animation-duration: 0.01ms !important;
-  animation-iteration-count: 1 !important;
-  transition-duration: 0.01ms !important;
+  transition: none !important;
   scroll-behavior: auto !important;
+}
+/* Decorative animation stops entirely. A loading spinner is state rather than
+   decoration, so it keeps turning — a frozen one reads as a hung app. */
+html[data-motion='reduced'] *:not([class*='animate-spin']),
+html[data-motion='reduced'] *:not([class*='animate-spin'])::before,
+html[data-motion='reduced'] *:not([class*='animate-spin'])::after {
+  animation: none !important;
 }
 
 html,
@@ -795,3 +818,18 @@ body {
     inset 0 1px 0 rgba(255, 255, 255, 0.7),
     0 8px 30px rgba(20, 40, 70, 0.1);
 }
+
+/* ---- popups -------------------------------------------------------------- */
+/* Dialogs and dropdowns lift off the page with a soft, wide shadow rather than
+   a hard edge, and open quickly — long enough to read as motion, short enough
+   not to be waited on. */
+[data-slot='dialog-content'],
+[data-slot='select-content'] {
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.18),
+    0 18px 48px rgba(0, 0, 0, 0.32);
+}
+
+/* The open/close motion itself comes from the component library (fade + 95%
+   zoom over 100ms). Re-declaring it here fought that, and centred keyframes
+   would have displaced the popper-positioned dropdowns outright. */

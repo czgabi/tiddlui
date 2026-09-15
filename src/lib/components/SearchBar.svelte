@@ -79,7 +79,7 @@
 		{ key: 'playlist', label: 'Playlists' },
 		{ key: 'artist', label: 'Artists' }
 	];
-	const iconFor = { track: '♪', album: '⊚', playlist: '☰', artist: '◓' };
+	const iconFor = { track: '♪', album: '⊚', playlist: '☰', artist: '◓', folder: '▸' };
 
 	function itemsFor(kind: ResourceKind): Resource[] {
 		const r = search.results;
