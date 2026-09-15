@@ -30,6 +30,7 @@
 	import { startDownload } from '$lib/queue';
 	import { installShortcuts } from '$lib/keyboard';
 	import { showDownloadProgress } from '$lib/taskbar';
+	import { initDeepLinks } from '$lib/deeplink';
 	import { TidalUrlIsValid } from '$lib/url';
 
 	let searchBar = $state<{ focus: () => void } | null>(null);
@@ -75,6 +76,7 @@
 	onMount(() => {
 		let cleanupShortcuts = () => {};
 		let unlistenDrop: (() => void) | undefined;
+		let unlistenLinks: (() => void) | undefined;
 
 		(async () => {
 			try {
@@ -91,6 +93,7 @@
 			player.muted = settings.mute_by_default; // applied when the audio element is created
 			await downloads.load(); // restore the queue/history from the last session
 			await initEngine();
+			unlistenLinks = await initDeepLinks().catch(() => undefined);
 
 			cleanupShortcuts = installShortcuts({
 				focusSearch: () => searchBar?.focus(),
@@ -113,6 +116,7 @@
 		return () => {
 			cleanupShortcuts();
 			unlistenDrop?.();
+			unlistenLinks?.();
 		};
 	});
 

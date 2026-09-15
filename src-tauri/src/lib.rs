@@ -12,7 +12,7 @@ mod audio_server;
 mod config;
 mod sidecar;
 
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -20,7 +20,22 @@ pub fn run() {
 
     #[cfg(desktop)]
     {
-        builder = builder.plugin(tauri_plugin_window_state::Builder::default().build());
+        // Must be registered before anything else: a second launch hands its
+        // arguments to the running instance and exits. Without it two copies
+        // would each spawn an engine and write the same settings/queue files.
+        builder = builder
+            .plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.set_focus();
+                    let _ = window.unminimize();
+                }
+                // Forward any tiddlui:// URL the second launch carried.
+                if let Some(url) = argv.iter().find(|a| a.starts_with("tiddlui://")) {
+                    let _ = app.emit("deep-link", url.clone());
+                }
+            }))
+            .plugin(tauri_plugin_deep_link::init())
+            .plugin(tauri_plugin_window_state::Builder::default().build());
     }
 
     builder
@@ -36,6 +51,16 @@ pub fn run() {
             // Tolerant of a missing binary during early scaffolding.
             if let Err(err) = sidecar::start(app.handle()) {
                 eprintln!("[tiddl] engine sidecar not started: {err}");
+            }
+            // The installer registers the tiddlui:// scheme on a real install;
+            // a dev build has to claim it itself to be testable. Debug only, so
+            // running from source never touches a shipped registration.
+            #[cfg(all(desktop, debug_assertions))]
+            {
+                use tauri_plugin_deep_link::DeepLinkExt;
+                if let Err(err) = app.deep_link().register_all() {
+                    eprintln!("[tiddl] deep link scheme not registered: {err}");
+                }
             }
             // Linux: local HTTP audio server for downloaded-track playback.
             // Inert on other platforms (they use asset:// directly).
