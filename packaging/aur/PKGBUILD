@@ -25,7 +25,9 @@ makedepends=(
 options=('!strip' '!debug')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/czgabi/tiddlui/archive/refs/tags/v$pkgver.tar.gz"
         "tiddlui.desktop")
-# Run `updpkgsums` after bumping pkgver to fill in the release tarball checksum.
+# pkgver and sha256sums below are placeholders. The release workflow stamps a
+# ready-to-use copy from the tag and attaches it to the GitHub Release, so
+# prefer the PKGBUILD downloaded from the release over this one.
 sha256sums=('SKIP'
             'SKIP')
 

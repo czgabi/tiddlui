@@ -185,3 +185,37 @@ jobs:
           releaseDraft: false
           prerelease: false
           args: --bundles deb,appimage
+
+      # The AUR PKGBUILD carries its own pkgver and checksums, which nothing
+      # else updates — the file in the repo is a template. Stamp it from the tag,
+      # fill in the real checksums, and attach it so whoever publishes to the AUR
+      # gets a file that already matches the release and needs no updpkgsums.
+      - name: Attach AUR PKGBUILD to the release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          v="${GITHUB_REF_NAME#v}"
+          tarball="https://github.com/${GITHUB_REPOSITORY}/archive/refs/tags/${GITHUB_REF_NAME}.tar.gz"
+
+          # The tag tarball is generated on demand and can lag the tag push.
+          for attempt in 1 2 3 4 5; do
+            if curl -fsSL --retry 2 -o /tmp/src.tar.gz "$tarball"; then break; fi
+            echo "tarball not ready (attempt $attempt), retrying"; sleep 10
+          done
+
+          src_sum="$(sha256sum /tmp/src.tar.gz | cut -d' ' -f1)"
+          desktop_sum="$(sha256sum packaging/aur/tiddlui.desktop | cut -d' ' -f1)"
+
+          cd packaging/aur
+          sed -i -E "s/^pkgver=.*/pkgver=${v}/" PKGBUILD
+          sed -i -E "s/^pkgrel=.*/pkgrel=1/" PKGBUILD
+          sed -i '/^# pkgver and sha256sums below are placeholders/,+2d' PKGBUILD
+          sed -i -E "s/^sha256sums=\('.*'$/sha256sums=('${src_sum}'/" PKGBUILD
+          sed -i -E "s/^([[:space:]]*)'.*'\)$/\1'${desktop_sum}')/" PKGBUILD
+
+          echo "--- stamped PKGBUILD ---"
+          grep -E "^(pkgver|pkgrel|sha256sums)|^ +'" PKGBUILD
+
+          gh release upload "${GITHUB_REF_NAME}" PKGBUILD tiddlui.desktop --clobber
