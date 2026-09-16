@@ -32,6 +32,25 @@
 			css: (t: number) => `opacity:${Math.max(0, t * t)};filter:blur(${(1 - t) * 3}px);`
 		};
 	}
+
+	// The box is sized by a hidden copy of the text. Sizing it on the new value
+	// alone resnaps the width the instant the value changes, before the new text
+	// has faded in — visible on a w-fit select trigger as the button resizing
+	// while it still shows the old label, which then overflows it. Holding the
+	// outgoing value in the sizer for the length of the swap keeps the box at
+	// the wider of the two until both texts have finished moving.
+	let outgoing = $state<string | number | null>(null);
+	let previous: string | number | undefined;
+
+	$effect(() => {
+		const next = value;
+		const last = previous;
+		previous = next;
+		if (last === undefined || last === next) return;
+		outgoing = last;
+		const id = setTimeout(() => (outgoing = null), duration);
+		return () => clearTimeout(id);
+	});
 </script>
 
 {#if motionReduced()}
@@ -43,8 +62,12 @@
 				{value}
 			</span>
 		{/key}
-		<!-- an invisible copy holds the box open so layout never jumps mid-swap -->
-		<span class="morph-sizer" aria-hidden="true">{value}</span>
+		<!-- invisible copies hold the box open so layout never jumps mid-swap;
+		     stacked in a grid cell so the box takes the wider of the two -->
+		<span class="morph-sizer" aria-hidden="true">
+			<span class="morph-size-item">{value}</span>
+			{#if outgoing !== null}<span class="morph-size-item">{outgoing}</span>{/if}
+		</span>
 	</span>
 {/if}
 
@@ -62,7 +85,10 @@
 	}
 	.morph-sizer {
 		visibility: hidden;
-		display: inline-block;
+		display: inline-grid;
+	}
+	.morph-size-item {
+		grid-area: 1 / 1;
 		white-space: nowrap;
 	}
 </style>

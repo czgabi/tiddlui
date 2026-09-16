@@ -1,11 +1,28 @@
 <div align="center">
 
-<img src="assets/logo.png" alt="Tiddlui" width="280" />
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/logo-white.png">
+  <img src="assets/logo.png" alt="Tiddlui" width="260">
+</picture>
 
-**A desktop app for downloading your Tidal music in lossless quality.**
-Search it, preview it, download it — no command line needed.
+<br>
 
-<img src="assets/screenshots/hero.png" alt="The Tiddlui main window with an album loaded" width="900" />
+**Download your Tidal music in lossless quality, from a desktop app.**<br>
+Search it, preview it, download it. No command line needed.
+
+<br>
+
+[![Release](https://img.shields.io/github/v/release/czgabi/tiddlui?style=flat-square&labelColor=0d1117&color=1f2328)](../../releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/czgabi/tiddlui/total?style=flat-square&labelColor=0d1117&color=1f2328)](../../releases)
+[![Build](https://img.shields.io/github/actions/workflow/status/czgabi/tiddlui/release.yml?style=flat-square&labelColor=0d1117)](../../actions/workflows/release.yml)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-1f2328?style=flat-square&labelColor=0d1117)](#install)
+[![License](https://img.shields.io/github/license/czgabi/tiddlui?style=flat-square&labelColor=0d1117&color=1f2328)](LICENSE)
+
+[Install](#install) · [First download](#your-first-download) · [Build from source](#build-from-source) · [How it works](#how-it-works)
+
+<br>
+
+<img src="assets/screenshots/hero.png" alt="The Tiddlui main window with an album loaded" width="900">
 
 </div>
 
@@ -26,7 +43,7 @@ Runs on Windows and Linux.
 ## Install
 
 You need your own Tidal subscription. Quality is capped by your plan, and you
-sign in on Tidal's own website — Tiddlui never sees your password.
+sign in on Tidal's own website, so Tiddlui never sees your password.
 
 ### Windows
 
@@ -34,7 +51,7 @@ Download **`Tiddlui_x.y.z_x64-setup.exe`** from [Releases](../../releases), run
 it, then click **Sign in**.
 
 ffmpeg is required to convert audio. If you don't already have it, Tiddlui
-downloads it automatically on first launch — you'll see a short
+downloads it automatically on first launch, showing a short
 "Preparing ffmpeg…" banner.
 
 ### Arch Linux
@@ -44,7 +61,7 @@ yay -S tiddlui        # or: paru -S tiddlui
 ```
 
 > **Not on the AUR yet.** The `PKGBUILD` lives in [`packaging/aur/`](packaging/aur/)
-> and has to be published by a maintainer after a release is tagged — see
+> and has to be published by a maintainer after a release is tagged. See
 > [`docs/PACKAGING.md`](docs/PACKAGING.md). Until then, build from source.
 
 ### Debian / Ubuntu
@@ -81,7 +98,7 @@ Progress shows in the **Queue & History** panel on the right (`Ctrl+H`).
 
 Search returns tracks, albums, playlists and artists at once. Results are ranked
 by how well they match *and* how popular they are, so the obvious answer comes
-first — and near-misses still work ("avici levels" finds Avicii).
+first, and near-misses still work ("avici levels" finds Avicii).
 
 Click an artist to see their bio, top tracks and full discography. Click any
 album to drill in; the back arrow returns you.
@@ -101,7 +118,7 @@ album or playlist plays the whole thing in order.
 | High | 16-bit FLAC (CD quality) |
 | Max | Up to 24-bit Hi-Res FLAC |
 
-Turn on **Convert to MP3** in Settings to also get a 320 kbps MP3 — useful for
+Turn on **Convert to MP3** in Settings to also get a 320 kbps MP3, useful for
 car stereos and older players. Tags and cover art carry across.
 
 ### Downloads, queue and retry
@@ -109,20 +126,20 @@ car stereos and older players. Tags and cover art carry across.
 <img src="assets/screenshots/downloading.png" alt="A queue entry downloading three tracks at once" width="330" />
 
 
-Albums and playlists download several tracks at once — 3 by default, adjustable
+Albums and playlists download several tracks at once: 3 by default, adjustable
 from 1 to 5. The queue shows combined speed and the real quality of each file.
 
 - **The queue survives a restart.** Close the app mid-download and it comes back
   marked as interrupted, ready to retry.
 - **Retry what failed.** One track failing in a 40-track album no longer loses
-  it silently — the row shows how many failed, and one click re-queues just
+  it silently. The row shows how many failed, and one click re-queues just
   those tracks.
 - **Duplicates ask first.** If a file already exists you can skip, replace or
   keep both, and apply that choice to the rest of the album.
 
 ### Your Tidal library
 
-**Library** opens your Tidal favourites — tracks, albums, artists and playlists —
+**Library** opens your Tidal favourites (tracks, albums, artists and playlists)
 so you can download things you already saved without hunting for links.
 
 ### The player
@@ -135,7 +152,7 @@ hover the speaker, and click-anywhere scrubbing.
 ### Themes
 
 
-Twelve themes, five dark and seven light. The flagship is **Aero** — a
+Twelve themes, five dark and seven light. The flagship is **Aero**, a
 liquid-glass look with a refractive rim that shifts as you hover. There's also
 Aurora, Obsidian, Slate, Nebula, Artsy, Cream, Aqua, Verdant, Mercury,
 Tangerine and Paper.
@@ -202,7 +219,7 @@ npm install
 ```
 
 Then build the Python engine into the executable Tauri bundles as a sidecar. A
-virtualenv is recommended — Python 3.13+ is required and many systems refuse
+virtualenv is recommended. Python 3.13+ is required, and many systems refuse
 global installs:
 
 ```bash
@@ -262,7 +279,7 @@ The frontend never talks to Tidal. It sends a command object to Rust, Rust
 writes it as one JSON line to the engine's stdin, and every line the engine
 writes to stdout is parsed and re-emitted as an `engine` event the frontend
 routes by its `type` field. That keeps the Rust layer stable no matter how the
-protocol grows — it forwards messages without understanding them.
+protocol grows, since it forwards messages without understanding them.
 
 Downloads are grouped: one queue entry ("an album") expands to many tracks. The
 engine reports progress at the group level as
@@ -275,7 +292,7 @@ are served to the `<audio>` element from a loopback HTTP server with range
 support. See [`docs/LINUX.md`](docs/LINUX.md).
 
 **Why a separate Python process?** [`tiddl`](https://github.com/oskvr37/tiddl)
-does the hard part — Tidal's API, stream manifests, tagging. Running it as a
+does the hard part: Tidal's API, stream manifests, tagging. Running it as a
 sidecar means we use it as-is rather than reimplementing it in Rust.
 
 ### Project layout
@@ -303,8 +320,8 @@ packaging/aur/       PKGBUILD and desktop entry for the AUR
 
 - **Login uses Tidal's device flow.** You authenticate on Tidal's own site;
   the app never sees your password.
-- **Tokens live in the OS keychain** — Windows Credential Manager, or the Secret
-  Service on Linux — never in a plaintext file. Signing out deletes them.
+- **Tokens live in the OS keychain**: Windows Credential Manager, or the Secret
+  Service on Linux. Never a plaintext file. Signing out deletes them.
 - **No accounts, keys or telemetry** ship with the app. It talks to Tidal's API
   and, on Windows, downloads ffmpeg on first launch.
 - Settings and your queue are stored as plain JSON in the app config folder.
@@ -330,7 +347,7 @@ in Settings. Tidal may throttle aggressive fetching.
 queue row shows the quality you actually got.
 
 **Linux: no audio, or glass panels look transparent.** Both are known WebKitGTK
-quirks with documented workarounds — see [`docs/LINUX.md`](docs/LINUX.md).
+quirks with documented workarounds. See [`docs/LINUX.md`](docs/LINUX.md).
 
 ---
 

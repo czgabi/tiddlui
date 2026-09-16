@@ -1,5 +1,37 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+- New logo and app icon. The wordmark in the header and in Settings is drawn
+  from a single monochrome asset tinted with the current text colour, so it
+  flips between black and white with the theme instead of shipping two files.
+- The spinning disc in the header is gone; the wordmark stands alone.
+- README uses the light or dark wordmark to match the reader's GitHub theme,
+  and gained release, downloads, build, platform and licence badges.
+- Dropdowns open with a short rollout anchored to the trigger edge, with the
+  rows trailing slightly behind the panel, and sit closer to their trigger with
+  the facing corners squared off so the two read as one surface.
+- Dropdowns cast a heavier shadow so they no longer blend into whatever they
+  open over.
+- Settings and Library open and close on a longer, softer curve instead of
+  appearing instantly.
+
+### Fixed
+- Dialogs and dropdowns had no open or close animation at all. The stylesheet
+  matched an attribute the component library does not set, so every one of
+  those rules was dead.
+- A dropdown trigger resized the moment a value was picked, a fraction of a
+  second before the new label faded in, so a longer label briefly overflowed
+  the button. The box now holds the wider of the two labels until the swap
+  finishes.
+
+### Internal
+- The release workflow stamps the AUR `PKGBUILD` with the tag version and the
+  real source checksums and attaches it to the release, so publishing to the
+  AUR no longer needs a manual version bump or `updpkgsums`. The `pkgver` in
+  the repo had been stuck at 1.5.0 since that release.
+
 ## 1.6.0
 
 ### Added

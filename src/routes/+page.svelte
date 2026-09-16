@@ -6,7 +6,7 @@
 	import { platform } from '@tauri-apps/plugin-os';
 	import { open as openDialog } from '@tauri-apps/plugin-dialog';
 	import { openUrl } from '@tauri-apps/plugin-opener';
-	import { Settings, Download, Square, FolderOpen, LogIn, Disc3, Library } from '@lucide/svelte';
+	import { Settings, Download, Square, FolderOpen, LogIn, Library } from '@lucide/svelte';
 
 	import SearchBar from '$lib/components/SearchBar.svelte';
 	import MetadataPanel from '$lib/components/MetadataPanel.svelte';
@@ -151,10 +151,9 @@
 		<button
 			onclick={() => openUrl('https://github.com/czgabi/tiddlui')}
 			title="Open the GitHub repo"
-			class="flex items-center gap-2 pr-1 transition-opacity hover:opacity-80"
+			class="flex shrink-0 items-center pr-1 transition-opacity hover:opacity-80"
 		>
-			<Disc3 class="size-6 text-accent-cyan" />
-			<span class="text-gradient text-lg font-semibold tracking-tight">Tiddlui</span>
+			<span class="wordmark" role="img" aria-label="Tiddlui"></span>
 		</button>
 		<div class="flex-1"><SearchBar bind:this={searchBar} /></div>
 		{#if auth.loggedIn}

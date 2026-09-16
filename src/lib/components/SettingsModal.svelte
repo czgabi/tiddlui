@@ -248,7 +248,7 @@
 			<div class="border-t border-foreground/10 pt-4">
 				<div class="mx-auto flex max-w-[15rem] flex-col items-center gap-1.5 rounded-xl border border-foreground/10 bg-foreground/5 px-5 py-4 text-center">
 					<span class="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">About</span>
-					<span class="text-base font-semibold text-foreground">{APP_NAME}</span>
+					<span class="wordmark my-0.5 text-foreground" style="--wordmark-h:1.35rem" role="img" aria-label={APP_NAME}></span>
 					<span class="rounded-full border border-foreground/10 px-2 py-0.5 text-xs text-muted-foreground">
 						v{APP_VERSION}
 					</span>
