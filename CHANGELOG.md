@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.6.1
 
 ### Changed
 - New logo and app icon. The wordmark in the header and in Settings is drawn
