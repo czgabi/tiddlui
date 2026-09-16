@@ -12,11 +12,11 @@ Search it, preview it, download it. No command line needed.
 
 <br>
 
-[![Release](https://img.shields.io/github/v/release/czgabi/tiddlui?style=flat-square&labelColor=0d1117&color=1f2328)](../../releases/latest)
-[![Downloads](https://img.shields.io/github/downloads/czgabi/tiddlui/total?style=flat-square&labelColor=0d1117&color=1f2328)](../../releases)
-[![Build](https://img.shields.io/github/actions/workflow/status/czgabi/tiddlui/release.yml?style=flat-square&labelColor=0d1117)](../../actions/workflows/release.yml)
-[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-1f2328?style=flat-square&labelColor=0d1117)](#install)
-[![License](https://img.shields.io/github/license/czgabi/tiddlui?style=flat-square&labelColor=0d1117&color=1f2328)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/czgabi/tiddlui)](../../releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/czgabi/tiddlui/total)](../../releases)
+[![Build](https://img.shields.io/github/actions/workflow/status/czgabi/tiddlui/release.yml)](../../actions/workflows/release.yml)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-blue)](#install)
+[![License](https://img.shields.io/github/license/czgabi/tiddlui)](LICENSE)
 
 [Install](#install) · [First download](#your-first-download) · [Build from source](#build-from-source) · [How it works](#how-it-works)
 
@@ -33,8 +33,9 @@ Search it, preview it, download it. No command line needed.
 - Search Tidal, or paste any track / album / playlist / artist link
 - Download in up to 24-bit Hi-Res, or plain MP3 if you prefer small files
 - Preview any track before you commit to downloading it
-- Browse your own Tidal favourites without opening Tidal
+- Browse, search and sort your own Tidal favourites without opening Tidal
 - Keeps your files named and foldered the way you want them
+- Picks up `tiddlui://` links and shows download progress on the taskbar
 
 Runs on Windows and Linux.
 
@@ -45,6 +46,8 @@ Runs on Windows and Linux.
 You need your own Tidal subscription. Quality is capped by your plan, and you
 sign in on Tidal's own website, so Tiddlui never sees your password.
 
+<br>
+
 ### Windows
 
 Download **`Tiddlui_x.y.z_x64-setup.exe`** from [Releases](../../releases), run
@@ -53,6 +56,8 @@ it, then click **Sign in**.
 ffmpeg is required to convert audio. If you don't already have it, Tiddlui
 downloads it automatically on first launch, showing a short
 "Preparing ffmpeg…" banner.
+
+<br>
 
 ### Arch Linux
 
@@ -63,6 +68,8 @@ yay -S tiddlui        # or: paru -S tiddlui
 > **Not on the AUR yet.** The `PKGBUILD` lives in [`packaging/aur/`](packaging/aur/)
 > and has to be published by a maintainer after a release is tagged. See
 > [`docs/PACKAGING.md`](docs/PACKAGING.md). Until then, build from source.
+
+<br>
 
 ### Debian / Ubuntu
 
@@ -83,7 +90,6 @@ A distro-agnostic `.AppImage` is attached to every release too.
 
 <img src="assets/screenshots/search.png" alt="Search results for an album" width="820" />
 
-
 1. **Find something.** Type in the search bar (`Ctrl+K`), or paste a Tidal link.
 2. **Pick a quality** with the slider at the bottom.
 3. **Hit Download.** For an album, use **Download all**.
@@ -103,11 +109,15 @@ first, and near-misses still work ("avici levels" finds Avicii).
 Click an artist to see their bio, top tracks and full discography. Click any
 album to drill in; the back arrow returns you.
 
+<br>
+
 ### Preview before downloading
 
 Hit **Preview** on a track to stream it straight from Tidal. Nothing is written
 to disk. The seek bar draws a real waveform of the track, and **Play** on an
 album or playlist plays the whole thing in order.
+
+<br>
 
 ### Quality
 
@@ -121,10 +131,11 @@ album or playlist plays the whole thing in order.
 Turn on **Convert to MP3** in Settings to also get a 320 kbps MP3, useful for
 car stereos and older players. Tags and cover art carry across.
 
+<br>
+
 ### Downloads, queue and retry
 
 <img src="assets/screenshots/downloading.png" alt="A queue entry downloading three tracks at once" width="330" />
-
 
 Albums and playlists download several tracks at once: 3 by default, adjustable
 from 1 to 5. The queue shows combined speed and the real quality of each file.
@@ -137,20 +148,39 @@ from 1 to 5. The queue shows combined speed and the real quality of each file.
 - **Duplicates ask first.** If a file already exists you can skip, replace or
   keep both, and apply that choice to the rest of the album.
 
+<br>
+
 ### Your Tidal library
 
 **Library** opens your Tidal favourites (tracks, albums, artists and playlists)
 so you can download things you already saved without hunting for links.
 
-### The player
+Search the whole library at once with the loupe, with results grouped by kind.
+Sort by recently added, title or artist (recently followed, for artists). More
+entries load as you reach the bottom of the list.
 
+Playlist folders are browsable, so playlists you filed into folders on Tidal are
+reachable here instead of being flattened into one list.
+
+<br>
+
+### The player
 
 Finished downloads load into the player automatically. You get a seekable
 waveform drawn from the actual audio, a volume slider that appears when you
 hover the speaker, and click-anywhere scrubbing.
 
-### Themes
+<br>
 
+### Desktop integration
+
+Download progress shows on the taskbar icon, so you can watch a long queue with
+the window minimised. `tiddlui://` links open in the running copy rather than
+starting a second one, and only one instance runs at a time.
+
+<br>
+
+### Themes
 
 Twelve themes, five dark and seven light. The flagship is **Aero**, a
 liquid-glass look with a refractive rim that shifts as you hover. There's also
@@ -161,7 +191,6 @@ Tangerine and Paper.
 
 ## Settings
 
-
 | Setting | What it does |
 | --- | --- |
 | Download folder | Where files are saved. You can also drag a folder onto the window. |
@@ -171,7 +200,10 @@ Tangerine and Paper.
 | Start muted | Begin every session muted; volume still starts at max |
 | Simultaneous downloads | Tracks fetched at once (1–5). Higher is faster, but Tidal may throttle heavy use. |
 | Theme | Twelve looks, applied instantly |
+| Animations | Turn off all motion. Forced off when your system asks for reduced motion. |
 | Notify when downloads finish | Desktop notification and a taskbar flash |
+
+<br>
 
 ### Keyboard shortcuts
 
@@ -294,6 +326,8 @@ support. See [`docs/LINUX.md`](docs/LINUX.md).
 **Why a separate Python process?** [`tiddl`](https://github.com/oskvr37/tiddl)
 does the hard part: Tidal's API, stream manifests, tagging. Running it as a
 sidecar means we use it as-is rather than reimplementing it in Rust.
+
+<br>
 
 ### Project layout
 
